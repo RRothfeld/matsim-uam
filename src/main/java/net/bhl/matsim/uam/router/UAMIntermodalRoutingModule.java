@@ -176,7 +176,7 @@ public class UAMIntermodalRoutingModule implements RoutingModule {
 			currentTime += waitTime;
 		} catch (IndexOutOfBoundsException e) {
 			if (counterWarningWaitingTimeSlot < counterLimit)
-				log.warn("UAM waiting time requests for non-existent time slot. Using default value of "
+				log.warn(UAMConstants.uam.toUpperCase() + " waiting time requests for non-existent time slot. Using default value of "
 						+ uamRoute.bestOriginStation.getDefaultWaitTime() + " for station "
 						+ uamRoute.bestOriginStation.getId().toString());
 
@@ -187,7 +187,7 @@ public class UAMIntermodalRoutingModule implements RoutingModule {
 			currentTime += uamRoute.bestOriginStation.getDefaultWaitTime(); // Added wait time of Origin Station
 		} catch (NullPointerException e) {
 			if (counterWarningWaitingTimeNull < counterLimit)
-				log.warn("UAM waiting time not available. Using default value of "
+				log.warn(UAMConstants.uam.toUpperCase() + " waiting time not available. Using default value of "
 						+ uamRoute.bestOriginStation.getDefaultWaitTime() + " for station "
 						+ uamRoute.bestOriginStation.getId().toString());
 

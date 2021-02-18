@@ -8,8 +8,6 @@
 <!ELEMENT station EMPTY>
 <!ATTLIST station	id				CDATA	#REQUIRED
 					link  			CDATA	#REQUIRED
-					x				CDATA	#IMPLIED
-					y				CDATA	#IMPLIED
 					name 			CDATA	#IMPLIED
 					preflighttime	CDATA	#REQUIRED
 					postflighttime	CDATA	#REQUIRED
@@ -29,8 +27,8 @@
 <!ATTLIST vehicle	id				CDATA	#REQUIRED
 					type			CDATA	#REQUIRED
 					initialstation	CDATA	#REQUIRED
-					starttime		CDATA	#IMPLIED
-					endtime			CDATA	#IMPLIED>
+					starttime		CDATA	#REQUIRED
+					endtime			CDATA	#REQUIRED>
 
 <!-- ============================================================ -->
 

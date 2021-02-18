@@ -1,6 +1,7 @@
 package net.bhl.matsim.uam.analysis.traveltimes;
 
 import ch.sbb.matsim.routing.pt.raptor.*;
+import com.opencsv.CSVParser;
 import net.bhl.matsim.uam.analysis.traveltimes.utils.ThreadCounter;
 import net.bhl.matsim.uam.analysis.traveltimes.utils.TripItem;
 import net.bhl.matsim.uam.analysis.traveltimes.utils.TripItemReader;
@@ -34,9 +35,7 @@ import java.util.concurrent.Executors;
 /**
  * This script generates csv file containing estimated travel times by Pt for
  * trips. The trips file must contain departure time and origin and destination
- * coordinates for the trips. Necessary inputs are in the following order:
- * -Network file; -Transit Schedule file; -Transit Vehicles file; -Trips file;
- * -output file;
+ * coordinates for the trips.
  *
  * @author Aitanm (Aitan Militao), RRothfeld (Raoul Rothfeld)
  */
@@ -50,7 +49,7 @@ public class RunCalculatePTTravelTimes {
 
 	public static void main(String[] args) throws Exception {
 		System.out.println(
-				"ARGS: config.xml* tripsCoordinateFile.csv* outputfile-name* write-description");
+				"ARGS: config.xml* trips.csv* outputfile-name* write-description");
 		System.out.println("(* required)");
 
 		// ARGS
@@ -118,7 +117,7 @@ public class RunCalculatePTTravelTimes {
 
 		writer.write(formatHeader() + "\n");
 		for (TripItem trip : trips) {
-			writer.write(String.join(",",
+			writer.write(String.join(String.valueOf(CSVParser.DEFAULT_SEPARATOR),
 					new String[]{String.valueOf(trip.origin.getX()), String.valueOf(trip.origin.getY()),
 							String.valueOf(trip.destination.getX()), String.valueOf(trip.destination.getY()),
 							String.valueOf(trip.departureTime), String.valueOf(trip.travelTime),
@@ -131,7 +130,8 @@ public class RunCalculatePTTravelTimes {
 	}
 
 	private static String formatHeader() {
-		return String.join(",", new String[]{"origin_x", "origin_y", "destination_x", "destination_y",
+		return String.join(String.valueOf(CSVParser.DEFAULT_SEPARATOR),
+				new String[]{"origin_x", "origin_y", "destination_x", "destination_y",
 				"departure_time", "travel_time", "distance", "description"});
 	}
 

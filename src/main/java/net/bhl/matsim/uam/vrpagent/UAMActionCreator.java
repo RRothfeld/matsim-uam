@@ -21,10 +21,12 @@ import org.matsim.contrib.dynagent.DynAgent;
  * @author balacmi (Milos Balac), RRothfeld (Raoul Rothfeld)
  */
 public class UAMActionCreator implements VrpAgentLogic.DynActionCreator {
-	public static final String PICKUP_ACTIVITY_TYPE = "UAMPickup";
-	public static final String DROPOFF_ACTIVITY_TYPE = "UAMDropoff";
-	public static final String STAY_ACTIVITY_TYPE = "UAMStay";
-	public static final String TURNAROUND_ACTIVITY_TYPE = "UAMTurnAround";
+	public static final String PICKUP_ACTIVITY_TYPE = UAMConstants.uam.toUpperCase() + "Pickup";
+	public static final String DROPOFF_ACTIVITY_TYPE = UAMConstants.uam.toUpperCase() + "Dropoff";
+	public static final String STAY_ACTIVITY_TYPE = UAMConstants.uam.toUpperCase() + "Stay";
+	public static final String TURNAROUND_ACTIVITY_TYPE = UAMConstants.uam.toUpperCase() + "TurnAround";
+	public static final String TRANSIT_ACTIVITY_TYPE = UAMConstants.uam.toUpperCase() + "Transit";
+
 	@Inject
 	@DvrpMode(UAMConstants.uam)
 	private PassengerEngine passengerEngine;

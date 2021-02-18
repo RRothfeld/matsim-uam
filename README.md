@@ -58,7 +58,8 @@ Updates the extension to MATSim version 11 and current DVRP version. Major chang
 
 ### v1.1
 Input/output:
-- UAM-enabled MATSim networks are required to provide an flight attribute indicating every flight links' flight segment (e.g. vertical or horizontal) - **No backwards compatibility of input network files.**
+- UAM-enabled MATSim networks are required to provide an flight attribute indicating every flight links' flight segment (e.g. vertical or horizontal)
+- **No backwards compatibility of input network files.**
 - Included script for generating networkChangeEvents (files) from simulation results
 
 Logging:
@@ -69,7 +70,7 @@ Logging:
 
 ## Related Publications
 The following list provides a reverse-chronological overview of publications related to or based on or related to the UAM-Extension:
-* Rothfeld, R., Fu, M., Balac, M., & Antoniou, C. (2020). Potential Urban Air Mobility Travel Time Savings: An Exploratory Analysis of Munich, Paris, and San Francisco. Submitted to Transportation Research Part C, Special Issue: “Embracing Urban Air Mobility.”
+* Rothfeld, R., Fu, M., Balac, M., & Antoniou, C. (2020). PRE-PRINT Potential Urban Air Mobility Travel Time Savings: An Exploratory Analysis of Munich, Paris, and San Francisco.
 * Straubinger, A., Rothfeld, R., Shamiyeh, M., Buechter, K.-D., Kaiser, J., & Ploetner, K. O. (2020). An Overview of Current Research and Developments in Urban Air Mobility - Setting the Scene for UAM Introduction. Journal of Air Transport Management, 87(101852). https://doi.org/10.1016/j.jairtraman.2020.101852
 * Ploetner, K., Rothfeld, R., Shamiyeh, M., Kabel, S., Frank, F., Straubinger, A., Llorca, C., Fu, M., Moreno, A., Pukhova, A., Zhang, Q., Al Haddad, C., Wagner, H., Antoniou, C., & Moeckel, R. (2020). Long-term Application Potential of Urban Air Mobility Complementing Public Transport: An Upper Bavaria Example. CEAS Aeronautical Journal: An Official Journal of the Council of European Aerospace Societies.
 * Rothfeld, R., Straubinger, A., Fu, M., Al Haddad, C., & Antoniou, C. (2020). Urban air mobility. In C. Antoniou, D. Efthymiou, & E. Chaniotakis (Eds.), Demand for Emerging Transportation Systems - Modeling Adoption, Satisfaction, and Mobility Patterns (1st ed., pp. 267–284). Elsevier.

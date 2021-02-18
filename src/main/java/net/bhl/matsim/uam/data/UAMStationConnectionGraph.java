@@ -63,7 +63,7 @@ public class UAMStationConnectionGraph {
 					String flightSegment = (String) link.getAttributes().getAttribute(UAMFlightSegments.ATTRIBUTE);
 
 					if (flightSegment == null)
-						log.error("UAM links within the MATSim network do not provide the \"type\" attribute, defining the flight segment.");
+						log.error(UAMConstants.uam.toUpperCase() + " links within the MATSim network do not provide the \"type\" attribute, defining the flight segment.");
 
 					if (flightSegment.equals(UAMFlightSegments.HORIZONTAL))
 						travelTime += link.getLength() / min(horizontalSpeed, link.getFreespeed());

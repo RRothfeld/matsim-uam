@@ -1,6 +1,7 @@
 package net.bhl.matsim.uam.schedule;
 
 import net.bhl.matsim.uam.passenger.UAMRequest;
+import net.bhl.matsim.uam.vrpagent.UAMActionCreator;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.schedule.StayTaskImpl;
 
@@ -55,7 +56,8 @@ public class UAMPickupTask extends StayTaskImpl implements UAMTask {
 
 	@Override
 	public String toString() {
-		return "UAMPickUpTask(" + (this.getName() != null ? this.getName() : "") + "@" + this.getLink().getId() + ")" + commonToString();
+		return UAMActionCreator.PICKUP_ACTIVITY_TYPE + "Task(" + (this.getName() != null ? this.getName() : "")
+				+ "@" + this.getLink().getId() + ")" + commonToString();
 	}
 
 }

@@ -1,6 +1,7 @@
 package net.bhl.matsim.uam.schedule;
 
 import net.bhl.matsim.uam.passenger.UAMRequest;
+import net.bhl.matsim.uam.vrpagent.UAMActionCreator;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.population.Person;
@@ -28,14 +29,13 @@ public class UAMTransitEvent extends Event implements HasPersonId {
 
 	@Override
 	public String getEventType() {
-		return "UAMTransit";
+		return UAMActionCreator.TRANSIT_ACTIVITY_TYPE;
 	}
 
 	@Override
 	public Map<String, String> getAttributes() {
 		Map<String, String> attr = super.getAttributes();
 		attr.put("person", request.getPassengerId().toString());
-		// attr.put("distance", String.valueOf(request.getRoute().getDistance()));
 		return attr;
 	}
 

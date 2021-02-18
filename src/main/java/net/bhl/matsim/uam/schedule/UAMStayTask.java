@@ -1,6 +1,7 @@
 package net.bhl.matsim.uam.schedule;
 
 import net.bhl.matsim.uam.passenger.UAMRequest;
+import net.bhl.matsim.uam.vrpagent.UAMActionCreator;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.schedule.StayTaskImpl;
 
@@ -17,7 +18,7 @@ public class UAMStayTask extends StayTaskImpl implements UAMTask {
 	}
 
 	public UAMStayTask(double beginTime, double endTime, Link link) {
-		this(beginTime, endTime, link, "UAMStay");
+		this(beginTime, endTime, link, UAMActionCreator.STAY_ACTIVITY_TYPE);
 	}
 
 	@Override

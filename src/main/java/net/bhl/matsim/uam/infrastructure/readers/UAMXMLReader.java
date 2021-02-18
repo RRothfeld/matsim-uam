@@ -63,17 +63,8 @@ public class UAMXMLReader extends MatsimXmlParser {
 
 				// Get station access/egress link or coordinates, to find nearest link
 				String linkName = atts.getValue("link");
-				Link link;
-				if (linkName != null) {
-					// A network link, to which the landing station is connected has been provided
-					List<Link> links = NetworkUtils.getLinks(network, linkName);
-					link = links.get(0);
-				} else {
-					// No network link has been provided, automatically assign the nearest link
-					double x = Double.parseDouble(atts.getValue("x"));
-					double y = Double.parseDouble(atts.getValue("y"));
-					link = NetworkUtils.getNearestLink(network, new Coord(x, y));
-				}
+				List<Link> links = NetworkUtils.getLinks(network, linkName);
+				Link link = links.get(0);
 
 				// Create UAm station and register it on station map
 				UAMStation ls = new UAMStationSimple(preFlightTime, postFlightTime, defaultWaitTime, link, id, stationName);
@@ -104,6 +95,7 @@ public class UAMXMLReader extends MatsimXmlParser {
 				// gets starttime and endtime
 				double starttime = Time.parseTime(atts.getValue("starttime"));
 				double endtime = Time.parseTime(atts.getValue("endtime"));
+				// TODO check whether start- and endtimes work correctly
 
 				// gets initial station
 				Id<UAMStation> stationid = Id.create(atts.getValue("initialstation"), UAMStation.class);
@@ -134,7 +126,7 @@ public class UAMXMLReader extends MatsimXmlParser {
 					vehiclesForData.put(id, vehicleCopy);
 
 				} catch (NullPointerException e) {
-					Log.warn("UAM vehicle " + id + " could not be added. Check correct initial station or vehicle type.");
+					Log.warn(UAMConstants.uam.toUpperCase() + " vehicle " + id + " could not be added. Check correct initial station or vehicle type.");
 				}
 				break;
 			}

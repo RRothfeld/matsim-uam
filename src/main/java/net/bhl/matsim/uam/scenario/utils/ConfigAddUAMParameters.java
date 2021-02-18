@@ -1,8 +1,8 @@
 package net.bhl.matsim.uam.scenario.utils;
 
 import net.bhl.matsim.uam.config.UAMConfigGroup;
-import net.bhl.matsim.uam.run.UAMConstants;
 import net.bhl.matsim.uam.router.strategy.UAMStrategy;
+import net.bhl.matsim.uam.run.UAMConstants;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
@@ -21,15 +21,13 @@ import java.util.Collection;
 public class ConfigAddUAMParameters {
 
 	public static void main(String[] args) {
-
-		System.out.println("args: path to config, UAM input file, modes, number of threads, search radius, " +
-				"walk distance, routing strategy, PT Simulation used");
+		System.out.println("ARGS: path to config, UAM input file, modes");
 
 		int i = 0;
 		Config config = ConfigUtils.loadConfig(args[i++], new DvrpConfigGroup());
-		addUAMParameters(config, args[i++], args[i++], Integer.parseInt(args[i++]), Integer.parseInt(args[i++]),
-				Integer.parseInt(args[i++]), UAMStrategy.UAMStrategyType.valueOf(args[i++].toUpperCase()),
-				Boolean.parseBoolean(args[i]));
+		// Using default inputs for optional parameters
+		addUAMParameters(config, args[i++], args[i++], 2, 5000, 500,
+				UAMStrategy.UAMStrategyType.MINTRAVELTIME, true);
 		ConfigWriter configWriter = new ConfigWriter(config);
 		configWriter.write(args[0] + "." + UAMConstants.uam + ".xml");
 	}
@@ -81,7 +79,9 @@ public class ConfigAddUAMParameters {
 
 		String mainMode = config.getModules().get("qsim").getParams().get("mainMode");
 		config.getModules().get("qsim").addParam("mainMode",
-				mainMode + "," + UAMConstants.access + "," + UAMConstants.egress);
+				mainMode.replace("[", ""). replace("]", "")
+						+ "," + UAMConstants.access + TransportMode.car
+						+ "," + UAMConstants.egress + TransportMode.car);
 
 		// UAM planCalcScore modes
 		String[] modeScores = {UAMConstants.uam,

@@ -1,5 +1,7 @@
 package net.bhl.matsim.uam.analysis.uamdemand;
 
+import net.bhl.matsim.uam.run.UAMConstants;
+
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -43,7 +45,7 @@ public class CSVUAMDemandWriter {
 						"destinationStationCoordX", "destinationStationCoordY", "destinationCoordX",
 						"destinationCoordY", "startTime", "arrivalAtStationTime", "takeOffTime", "landingTime",
 						"departureFromStationTime", "endTime", "vehicleId", "originStationId", "destinationStationId",
-						"accessMode", "egressMode", "uamTrip"});
+						"accessMode", "egressMode", UAMConstants.uam + "Trip"});
 	}
 
 	private String formatData(UAMDemandItem uamData) {
@@ -63,6 +65,6 @@ public class CSVUAMDemandWriter {
 							uamData.egressMode, String.valueOf(uamData.uamTrip)});
 		} catch (Exception ignored) {
 		}
-		return "uamData could not be read";
+		return UAMConstants.uam + "Data could not be read";
 	}
 }

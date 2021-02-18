@@ -1,0 +1,13 @@
+fromStation,fromNode,toStation,toNode,cruisedistance,vtoldistance
+D,uam_st_D_fa,C,uam_st_C_fa,3188.3392277060584,1200.0
+D,uam_st_D_fa,A,uam_st_A_fa,8066.406052464452,1200.0
+D,uam_st_D_fa,B,uam_st_B_fa,8223.227508492435,1200.0
+C,uam_st_C_fa,D,uam_st_D_fa,3188.3392277060584,1200.0
+C,uam_st_C_fa,A,uam_st_A_fa,8223.227508492435,1200.0
+C,uam_st_C_fa,B,uam_st_B_fa,8380.048964520418,1200.0
+A,uam_st_A_fa,D,uam_st_D_fa,8066.406052464452,1200.0
+A,uam_st_A_fa,C,uam_st_C_fa,8223.227508492435,1200.0
+A,uam_st_A_fa,B,uam_st_B_fa,3188.3392277060584,1200.0
+B,uam_st_B_fa,D,uam_st_D_fa,8223.227508492435,1200.0
+B,uam_st_B_fa,C,uam_st_C_fa,8380.048964520418,1200.0
+B,uam_st_B_fa,A,uam_st_A_fa,3188.3392277060584,1200.0

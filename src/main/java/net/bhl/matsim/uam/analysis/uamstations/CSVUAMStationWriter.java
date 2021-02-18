@@ -1,5 +1,7 @@
 package net.bhl.matsim.uam.analysis.uamstations;
 
+import net.bhl.matsim.uam.run.UAMConstants;
+
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -53,6 +55,6 @@ public class CSVUAMStationWriter {
 							station.link});
 		} catch (Exception ignored) {
 		}
-		return "uamData could not be read";
+		return UAMConstants.uam + "Data could not be read";
 	}
 }

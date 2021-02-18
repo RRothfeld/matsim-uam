@@ -49,7 +49,7 @@ import java.util.Map;
  * @author balacmi (Milos Balac), RRothfeld (Raoul Rothfeld)
  */
 public class UAMQsimModule extends AbstractDvrpModeQSimModule {
-	public final static String COMPONENT_NAME = "UAMExtension";
+	public final static String COMPONENT_NAME = UAMConstants.uam.toUpperCase() + "Extension";
 	private UAMManager uamManager;
 	private UAMXMLReader uamReader;
 

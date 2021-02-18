@@ -14,6 +14,7 @@ public class TripItem {
 	public double accessTime;
 	public double flightTime;
 	public double egressTime;
+	public double processTime;
 	public String accessMode;
 	public String egressMode;
 	public String originStation;

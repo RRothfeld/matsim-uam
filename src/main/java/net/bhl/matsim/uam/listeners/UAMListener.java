@@ -3,6 +3,7 @@ package net.bhl.matsim.uam.listeners;
 import com.google.inject.Inject;
 import net.bhl.matsim.uam.events.UAMData;
 import net.bhl.matsim.uam.events.UAMDemand;
+import net.bhl.matsim.uam.run.UAMConstants;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.controler.events.IterationEndsEvent;
@@ -28,7 +29,8 @@ public class UAMListener implements IterationEndsListener {
 	public void notifyIterationEnds(IterationEndsEvent event) {
 		// UAMDemand
 		Map<Id<Person>, ArrayList<UAMData>> data = this.uamDemand.getDemand();
-		BufferedWriter writer = IOUtils.getBufferedWriter(event.getServices().getControlerIO().getIterationFilename(event.getIteration(), "uamdemand.csv"));
+		BufferedWriter writer = IOUtils.getBufferedWriter(event.getServices().getControlerIO().getIterationFilename(event.getIteration(),
+				UAMConstants.uam + "demand.csv"));
 
 		try {
 			writer.write("peronId,originCoordX,originCoordY,originStationCoordX,originStationCoordY,destinationStationCoordX,"

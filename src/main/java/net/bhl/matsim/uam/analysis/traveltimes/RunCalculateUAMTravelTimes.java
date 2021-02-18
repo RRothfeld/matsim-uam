@@ -3,6 +3,7 @@ package net.bhl.matsim.uam.analysis.traveltimes;
 import ch.ethz.matsim.av.plcpc.DefaultParallelLeastCostPathCalculator;
 import ch.ethz.matsim.av.plcpc.ParallelLeastCostPathCalculator;
 import ch.sbb.matsim.routing.pt.raptor.*;
+import com.opencsv.CSVParser;
 import net.bhl.matsim.uam.analysis.traveltimes.utils.ThreadCounter;
 import net.bhl.matsim.uam.analysis.traveltimes.utils.TripItem;
 import net.bhl.matsim.uam.analysis.traveltimes.utils.TripItemReader;
@@ -12,8 +13,8 @@ import net.bhl.matsim.uam.data.UAMStationConnectionGraph;
 import net.bhl.matsim.uam.dispatcher.UAMManager;
 import net.bhl.matsim.uam.infrastructure.UAMStations;
 import net.bhl.matsim.uam.infrastructure.readers.UAMXMLReader;
-import net.bhl.matsim.uam.run.UAMConstants;
 import net.bhl.matsim.uam.router.strategy.*;
+import net.bhl.matsim.uam.run.UAMConstants;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -46,10 +47,7 @@ import java.util.concurrent.Executors;
 /**
  * This script generates csv file containing estimated travel times by UAM for
  * trips. The trips file must contain departure time and origin and destination
- * coordinates for the trips. Necessary inputs are in the following order:
- * -Network file; -UAM vehicles file -Transit Schedule file; -Transit Vehicles
- * file; -Trips file; -strategy name(minTraveltime, minDistance,
- * minAccessTravelTime, minAccessDistance) -output file; ;
+ * coordinates for the trips.
  *
  * @author Aitanm (Aitan Militao), RRothfeld (Raoul Rothfeld)
  */
@@ -62,10 +60,8 @@ public class RunCalculateUAMTravelTimes {
 	private static ArrayBlockingQueue<DefaultParallelLeastCostPathCalculator> uamRouters = new ArrayBlockingQueue<>(processes);
 
 	public static void main(String[] args) throws Exception {
-		System.out.println("ARGS: config.xml* tripsCoordinateFile.csv* outputfile-name*");
+		System.out.println("ARGS: config.xml* trips.csv* outputfile-name*");
 		System.out.println("(* required)");
-
-		log.warn("UAM process times are being ignored! All passenger processes are set to duration of 0.");
 
 		// ARGS
 		int j = 0;
@@ -179,7 +175,7 @@ public class RunCalculateUAMTravelTimes {
 
 		writer.write(formatHeader() + "\n");
 		for (TripItem trip : trips) {
-			writer.write(String.join(",",
+			writer.write(String.join(String.valueOf(CSVParser.DEFAULT_SEPARATOR),
 					new String[]{String.valueOf(trip.origin.getX()), String.valueOf(trip.origin.getY()),
 							String.valueOf(trip.destination.getX()), String.valueOf(trip.destination.getY()),
 							String.valueOf(trip.departureTime), String.valueOf(trip.travelTime),
@@ -194,7 +190,7 @@ public class RunCalculateUAMTravelTimes {
 	}
 
 	private static String formatHeader() {
-		return String.join(",",
+		return String.join(String.valueOf(CSVParser.DEFAULT_SEPARATOR),
 				new String[]{"origin_x", "origin_y", "destination_x", "destination_y", "departure_time",
 						"travel_time", "access_time", "flight_time", "egress_time", "access_mode",
 						"egress_mode", "orig_station", "dest_station"});
@@ -274,6 +270,9 @@ public class RunCalculateUAMTravelTimes {
 				trip.originStation = uamRoute.bestOriginStation.getId().toString();
 				trip.destinationStation = uamRoute.bestDestinationStation.getId().toString();
 
+				trip.processTime = uamRoute.bestOriginStation.getPreFlightTime()
+						+ uamRoute.bestDestinationStation.getPostFlightTime();
+
 				trip.accessTime = strategyUtils.getAccessTime(fromFacility, trip.departureTime,
 						uamRoute.bestOriginStation, uamRoute.accessMode);
 
@@ -282,7 +281,7 @@ public class RunCalculateUAMTravelTimes {
 				trip.egressTime = strategyUtils.getEgressTime(toFacility, trip.departureTime,
 						uamRoute.bestDestinationStation, uamRoute.egressMode);
 
-				trip.travelTime = trip.accessTime + trip.flightTime + trip.egressTime;
+				trip.travelTime = trip.accessTime + trip.flightTime + trip.egressTime + trip.processTime;
 			} catch (NullPointerException e) {
 				//e.printStackTrace();
 			}

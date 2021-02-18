@@ -109,8 +109,10 @@ public class UAMClosestRangedPreferPooledDispatcher implements UAMDispatcher {
 				double currentDistance = NetworkUtils.getEuclideanDistance(requestCoord,
 						availableVehicleLocations.get(closestVehiclesOfType));
 
-				if (currentDistance < distance)
+				if (currentDistance < distance) {
 					vehicle = closestVehiclesOfType;
+					distance = currentDistance;
+				}
 			}
 
 			if (vehicle != null) {

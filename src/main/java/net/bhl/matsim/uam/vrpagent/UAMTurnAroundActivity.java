@@ -11,7 +11,6 @@ import org.matsim.contrib.dynagent.DynActivity;
  */
 public class UAMTurnAroundActivity implements DynActivity {
 
-	private static final String activityType = "UAMTurnAround";
 	final private UAMTurnAroundTask turnAroundTask;
 	private double now;
 
@@ -27,7 +26,7 @@ public class UAMTurnAroundActivity implements DynActivity {
 
 	@Override
 	public String getActivityType() {
-		return activityType;
+		return UAMActionCreator.TURNAROUND_ACTIVITY_TYPE;
 	}
 
 	@Override

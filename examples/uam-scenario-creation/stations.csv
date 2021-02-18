@@ -1,5 +1,5 @@
-station_id,station_name,station_x,station_y,station_z,vtol_z,road_access_capacity,road_access_freespeed,flight_access_capacity,flight_access_freespeed,station_preflighttime,station_postflighttime,station_defaultwaittime
-00,station_00,6020,500,0,600,99999,100,99999,100,600,120,0
-01,station_01,6020,-500,0,600,99999,100,99999,100,600,120,0
-04,station_04,14020,500,0,600,99999,100,99999,100,600,120,0
-05,station_05,14020,-500,0,600,99999,100,99999,100,600,120,0
+station_id,station_name,x,y,z,vtol_z,ground_access_capacity,ground_access_freespeed,flight_access_capacity,flight_access_freespeed,preflighttime,postflighttime,defaultwaittime
+A,Alpha,6020,500,0,600,999,35,999,35,900,300,0
+B,Bravo,6020,-500,0,600,999,35,999,35,600,120,480
+C,Charlie,14020,500,0,600,999,35,999,35,300,60,0
+D,Delta,14020,-500,0,600,999,35,999,35,150,30,300

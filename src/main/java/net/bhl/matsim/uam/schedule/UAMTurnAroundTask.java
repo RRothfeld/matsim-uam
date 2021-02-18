@@ -1,6 +1,7 @@
 package net.bhl.matsim.uam.schedule;
 
 import net.bhl.matsim.uam.passenger.UAMRequest;
+import net.bhl.matsim.uam.vrpagent.UAMActionCreator;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.schedule.StayTaskImpl;
 
@@ -18,7 +19,7 @@ public class UAMTurnAroundTask extends StayTaskImpl implements UAMTask {
 	private final Set<UAMRequest> requests = new HashSet<>(); // does it need to store the request list ?
 
 	public UAMTurnAroundTask(double beginTime, double endTime, Link link) {
-		super(beginTime, endTime, link, "TurnAround");
+		super(beginTime, endTime, link, UAMActionCreator.TURNAROUND_ACTIVITY_TYPE);
 	}
 
 	public UAMTurnAroundTask(double beginTime, double endTime, Link link, Collection<UAMRequest> requests) {

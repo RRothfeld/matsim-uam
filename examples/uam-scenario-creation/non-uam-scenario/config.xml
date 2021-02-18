@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE config SYSTEM "./dtd/config_v2.dtd">
+
+<config>
+	<module name="global" >
+		<param name="coordinateSystem" value="Atlantis" />
+		<param name="numberOfThreads" value="4" />
+	</module>
+
+	<module name="network">
+		<param name="inputNetworkFile" value="network.xml" />
+	</module>
+
+	<module name="plans">
+		<param name="inputPlansFile" value="population.xml" />
+	</module>
+
+	<module name="controler" >
+		<param name="firstIteration" value="0" />
+		<param name="lastIteration" value="0" />
+		<param name="writeEventsInterval" value="1" />
+		<param name="writePlansInterval" value="1" />
+		<param name="outputDirectory" value="output" />
+		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
+	</module>
+
+	<module name="qsim">
+		<param name="endTime" value="12:00:00" />
+		<param name="numberOfThreads" value="4" />
+		<param name="flowCapacityFactor" value="1" />
+		<param name="storageCapacityFactor" value="1" />
+		<param name="mainMode" value="car"/>
+	</module>
+
+	<module name="planCalcScore">
+		<parameterset type="activityParams">
+			<param name="activityType" value="home" />
+			<param name="scoringThisActivityAtAll" value="false" />
+		</parameterset>
+
+		<parameterset type="activityParams">
+			<param name="activityType" value="work" />
+			<param name="scoringThisActivityAtAll" value="false" />
+		</parameterset>
+	</module>
+
+	<module name="planscalcroute">
+		<parameterset type="teleportedModeParameters">
+			<param name="mode" value="walk" />
+			<param name="teleportedModeSpeed" value="2.2" />
+			<param name="beelineDistanceFactor" value="1.0" />
+		</parameterset>
+	</module>
+
+	<module name="strategy">
+		<param name="maxAgentPlanMemorySize" value="1" />
+
+		<param name="ModuleProbability_1" value="1" />
+		<param name="Module_1" value="KeepLastSelected" />
+	</module>
+</config>
