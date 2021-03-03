@@ -1,23 +1,26 @@
 package net.bhl.matsim.uam.router;
 
-import ch.ethz.matsim.av.plcpc.ParallelLeastCostPathCalculator;
-import ch.ethz.matsim.baseline_scenario.transit.routing.BaselineTransitRoutingModule;
-import net.bhl.matsim.uam.config.UAMConfigGroup;
-import net.bhl.matsim.uam.data.*;
-import net.bhl.matsim.uam.infrastructure.UAMStations;
-import net.bhl.matsim.uam.router.strategy.UAMStrategyRouter;
-import net.bhl.matsim.uam.run.UAMConstants;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.population.*;
+import org.matsim.api.core.v01.population.Activity;
+import org.matsim.api.core.v01.population.Leg;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.PlanElement;
+import org.matsim.api.core.v01.population.PopulationFactory;
+import org.matsim.api.core.v01.population.Route;
 import org.matsim.core.config.groups.PlansCalcRouteConfigGroup;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.population.routes.RouteFactories;
-import org.matsim.core.router.*;
+import org.matsim.core.router.LinkWrapperFacility;
+import org.matsim.core.router.RoutingModule;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.LeastCostPathCalculator.Path;
 import org.matsim.core.utils.geometry.CoordUtils;
@@ -25,8 +28,17 @@ import org.matsim.facilities.Facility;
 import org.matsim.pt.config.TransitConfigGroup;
 import org.matsim.pt.router.TransitRouter;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.google.common.base.Verify;
+
+import net.bhl.matsim.uam.config.UAMConfigGroup;
+import net.bhl.matsim.uam.data.UAMFlightLeg;
+import net.bhl.matsim.uam.data.UAMRoute;
+import net.bhl.matsim.uam.data.UAMRoutes;
+import net.bhl.matsim.uam.data.UAMStationConnectionGraph;
+import net.bhl.matsim.uam.data.WaitingStationData;
+import net.bhl.matsim.uam.infrastructure.UAMStations;
+import net.bhl.matsim.uam.router.strategy.UAMStrategyRouter;
+import net.bhl.matsim.uam.run.UAMConstants;
 
 /**
  * This class provides the route legs for a trip using UAM from pre-calculated UAM legs.
@@ -43,29 +55,29 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 	private int counterWarningConvertedToWalk = 0;
 	private LeastCostPathCalculator plcpccar;
 	private Network carNetwork;
-	private BaselineTransitRoutingModule transitRouterDelegate;
+	private RoutingModule transitRouterDelegate;
 	private WaitingStationData waitingData;
 	private UAMStationConnectionGraph stationConnections;
 	private UAMStrategyRouter strategyRouter;
 
 	// constructor used in case of simulating PT
 	public UAMCachedIntermodalRoutingModule(Scenario scenario, UAMStations landingStations,
-											ParallelLeastCostPathCalculator plcpc, LeastCostPathCalculator plcpccar,
+											LeastCostPathCalculator uamPathCalculator, LeastCostPathCalculator plcpccar,
 											Network carNetwork, TransitRouter transitRouter, UAMConfigGroup uamConfig,
 											TransitConfigGroup transitConfigGroup,
-											BaselineTransitRoutingModule transitRouterDelegate,
+											RoutingModule transitRouterDelegate,
 											WaitingStationData waitingData,
 											UAMStationConnectionGraph stationConnections) {
-		this(scenario, landingStations, plcpc, plcpccar, carNetwork, uamConfig, transitConfigGroup,
+		this(scenario, landingStations, uamPathCalculator, plcpccar, carNetwork, uamConfig, transitConfigGroup,
 				waitingData, stationConnections);
 		this.transitRouterDelegate = transitRouterDelegate;
-		this.strategyRouter = new UAMStrategyRouter(transitRouter, scenario, uamConfig, plcpc, plcpccar,
+		this.strategyRouter = new UAMStrategyRouter(transitRouter, scenario, uamConfig, plcpccar,
 				landingStations, carNetwork, stationConnections);
 
 	}
 
 	public UAMCachedIntermodalRoutingModule(Scenario scenario, UAMStations landingStations,
-											ParallelLeastCostPathCalculator plcpc, LeastCostPathCalculator plcpccar, Network carNetwork,
+											LeastCostPathCalculator uamPathCalculator, LeastCostPathCalculator plcpccar, Network carNetwork,
 											UAMConfigGroup uamConfig, TransitConfigGroup transitConfigGroup,
 											WaitingStationData waitingData, UAMStationConnectionGraph stationConnections) {
 		this.scenario = scenario;
@@ -74,7 +86,7 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 		this.waitingData = waitingData;
 		this.stationConnections = stationConnections;
 
-		this.strategyRouter = new UAMStrategyRouter(scenario, uamConfig, plcpc, plcpccar, landingStations,
+		this.strategyRouter = new UAMStrategyRouter(scenario, uamConfig, plcpccar, landingStations,
 				carNetwork, stationConnections);
 	}
 
@@ -87,11 +99,12 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 		RouteFactories routeFactory = populationFactory.getRouteFactories();
 		final List<PlanElement> trip = new ArrayList<>();
 
-		UAMRoute uamRoute = UAMRoutes.getInstance().get(person.getId(), departureTime);
-		if (uamRoute == null)
-			uamRoute = strategyRouter.estimateUAMRoute(person, fromFacility, toFacility, departureTime);
+		Optional<UAMRoute> optionalUamRoute = Optional.ofNullable(UAMRoutes.getInstance().get(person.getId(), departureTime));
+		
+		if (optionalUamRoute.isEmpty())
+			optionalUamRoute = strategyRouter.estimateUAMRoute(person, fromFacility, toFacility, departureTime);
 
-		if (uamRoute == null) {
+		if (optionalUamRoute.isEmpty()) {
 			if (counterWarningConvertedToWalk < counterLimit)
 				log.warn("No UAM prediction for person: " + person.getId() + " at time: " + departureTime
 						+ " could be calculated. Trip has been converted to walk.");
@@ -106,6 +119,8 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 			trip.add(l);
 			return trip;
 		}
+		
+		UAMRoute uamRoute = optionalUamRoute.get();
 
 		/* access trip */
 		double currentTime = departureTime;
@@ -119,7 +134,7 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 						.get(uamRoute.bestOriginStation.getLocationLink().getId());
 				Leg carLeg = createCarLeg(UAMConstants.access + TransportMode.car, accessOriginLink,
 						accessDestinationLink, departureTime, person, routeFactory, populationFactory);
-				currentTime += carLeg.getTravelTime();
+				currentTime += carLeg.getTravelTime().seconds();
 				trip.add(carLeg);
 				break;
 			case TransportMode.pt:
@@ -130,14 +145,14 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 							new LinkWrapperFacility(uamRoute.bestOriginStation.getLocationLink()), departureTime, person);
 					for (PlanElement leg : legs) {
 						if (leg instanceof Leg)
-							currentTime += ((Leg) leg).getTravelTime();
+							currentTime += ((Leg) leg).getTravelTime().seconds();
 					}
 					trip.addAll(legs);
 				} else {
 					Leg uavPtAccessLeg = createTeleportationLeg(routeFactory, populationFactory,
 							network.getLinks().get(fromFacility.getLinkId()), uamRoute.bestOriginStation.getLocationLink(),
 							uamRoute.accessMode, uamRoute.accessMode);
-					currentTime += uavPtAccessLeg.getTravelTime();
+					currentTime += uavPtAccessLeg.getTravelTime().seconds();
 					trip.add(uavPtAccessLeg);
 				}
 				break;
@@ -145,7 +160,7 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 				Leg uavAccessLeg = createTeleportationLeg(routeFactory, populationFactory,
 						network.getLinks().get(fromFacility.getLinkId()), uamRoute.bestOriginStation.getLocationLink(),
 						uamRoute.accessMode, UAMConstants.access + uamRoute.accessMode);
-				currentTime += uavAccessLeg.getTravelTime();
+				currentTime += uavAccessLeg.getTravelTime().seconds();
 				trip.add(uavAccessLeg);
 		}
 
@@ -279,6 +294,8 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 
 	private Leg createCarLeg(String mode, Link originLink, Link destinationLink, double departureTime, Person person,
 							 RouteFactories routeFactory, PopulationFactory populationFactory) {
+		Verify.verifyNotNull(originLink);
+		Verify.verifyNotNull(destinationLink);
 		Path path = plcpccar.calcLeastCostPath(originLink.getToNode(), destinationLink.getFromNode(), departureTime,
 				person, null);
 
@@ -302,12 +319,5 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 		leg.setTravelTime(travelTime);
 		leg.setRoute(route);
 		return leg;
-	}
-
-	@Override
-	public StageActivityTypes getStageActivityTypes() {
-		final CompositeStageActivityTypes stageTypes = new CompositeStageActivityTypes();
-		stageTypes.addActivityTypes(new StageActivityTypesImpl(UAMConstants.interaction));
-		return stageTypes;
 	}
 }

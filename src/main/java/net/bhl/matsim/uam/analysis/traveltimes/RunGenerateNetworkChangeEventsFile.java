@@ -59,7 +59,7 @@ public class RunGenerateNetworkChangeEventsFile {
 				config.travelTimeCalculator());
 		config.qsim().setEndTime(endTime);
 		List<NetworkChangeEvent> networkChangeEvents = createNetworkChangeEvents(networkForReader, tcc,
-				config.qsim().getEndTime(), timeStep, minFreeSpeed);
+				config.qsim().getEndTime().seconds(), timeStep, minFreeSpeed);
 		new NetworkChangeEventsWriter().write(networkEventsChangeFile, networkChangeEvents);
 	}
 

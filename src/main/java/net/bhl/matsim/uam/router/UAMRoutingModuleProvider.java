@@ -1,15 +1,7 @@
 package net.bhl.matsim.uam.router;
 
-import ch.ethz.matsim.av.plcpc.ParallelLeastCostPathCalculator;
-import ch.ethz.matsim.baseline_scenario.transit.routing.BaselineTransitRoutingModule;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.google.inject.name.Named;
-import net.bhl.matsim.uam.config.UAMConfigGroup;
-import net.bhl.matsim.uam.data.UAMStationConnectionGraph;
-import net.bhl.matsim.uam.data.WaitingStationData;
-import net.bhl.matsim.uam.dispatcher.UAMManager;
-import net.bhl.matsim.uam.run.UAMConstants;
+import java.util.Map;
+
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
@@ -22,7 +14,15 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.pt.config.TransitConfigGroup;
 import org.matsim.pt.router.TransitRouter;
 
-import java.util.Map;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
+
+import net.bhl.matsim.uam.config.UAMConfigGroup;
+import net.bhl.matsim.uam.data.UAMStationConnectionGraph;
+import net.bhl.matsim.uam.data.WaitingStationData;
+import net.bhl.matsim.uam.dispatcher.UAMManager;
+import net.bhl.matsim.uam.run.UAMConstants;
 
 /**
  * This class provides the routing module for UAM mode.
@@ -32,17 +32,18 @@ import java.util.Map;
 public class UAMRoutingModuleProvider implements Provider<RoutingModule> {
 
 	@Inject
-	@Named(TransportMode.car)
+	@Named("uam_car")
 	Network networkCar;
 	@Inject(optional = true)
-	BaselineTransitRoutingModule transitRouting;
+	@Named(TransportMode.pt)
+	RoutingModule transitRouting;
 	@Inject
 	private Scenario scenario;
 	@Inject
 	private UAMManager uamManager;
 	@Inject
 	@Named(UAMConstants.uam)
-	private ParallelLeastCostPathCalculator plcpc;
+	private LeastCostPathCalculator uamPathCalculator;
 	@Inject
 	private LeastCostPathCalculatorFactory lcpcf;
 	@Inject
@@ -71,11 +72,11 @@ public class UAMRoutingModuleProvider implements Provider<RoutingModule> {
 		LeastCostPathCalculator pathCalculator = lcpcf.createPathCalculator(networkCar, travelDisutility, travelTime);
 
 		if (scenario.getConfig().transit().isUseTransit()) {
-			return new UAMCachedIntermodalRoutingModule(scenario, uamManager.getStations(), plcpc, pathCalculator,
+			return new UAMCachedIntermodalRoutingModule(scenario, uamManager.getStations(), uamPathCalculator, pathCalculator,
 					networkCar, transitRouter, uamConfig, transitConfig, transitRouting, waitingData,
 					stationConnectionutilities);
 		} else {
-			return new UAMCachedIntermodalRoutingModule(scenario, uamManager.getStations(), plcpc, pathCalculator,
+			return new UAMCachedIntermodalRoutingModule(scenario, uamManager.getStations(), uamPathCalculator, pathCalculator,
 					networkCar, uamConfig, transitConfig, waitingData, stationConnectionutilities);
 		}
 	}

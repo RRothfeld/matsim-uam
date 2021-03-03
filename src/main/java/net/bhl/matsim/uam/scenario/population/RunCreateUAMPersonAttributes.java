@@ -1,12 +1,9 @@
 package net.bhl.matsim.uam.scenario.population;
 
-import ch.ethz.matsim.baseline_scenario.transit.routing.DefaultEnrichedTransitRoute;
-import ch.ethz.matsim.baseline_scenario.transit.routing.DefaultEnrichedTransitRouteFactory;
-import net.bhl.matsim.uam.config.UAMConfigGroup;
-import net.bhl.matsim.uam.infrastructure.UAMStation;
-import net.bhl.matsim.uam.infrastructure.UAMStations;
-import net.bhl.matsim.uam.infrastructure.readers.UAMXMLReader;
-import net.bhl.matsim.uam.run.UAMConstants;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
@@ -24,9 +21,11 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.utils.objectattributes.ObjectAttributes;
 import org.matsim.utils.objectattributes.ObjectAttributesXmlWriter;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import net.bhl.matsim.uam.config.UAMConfigGroup;
+import net.bhl.matsim.uam.infrastructure.UAMStation;
+import net.bhl.matsim.uam.infrastructure.UAMStations;
+import net.bhl.matsim.uam.infrastructure.readers.UAMXMLReader;
+import net.bhl.matsim.uam.run.UAMConstants;
 
 /**
  * This script generates a xml subpopulation attributes file containing the id
@@ -46,8 +45,6 @@ public class RunCreateUAMPersonAttributes {
 		Config config = ConfigUtils.loadConfig(inputConfig, uamConfigGroup, new DvrpConfigGroup());
 
 		Scenario scenario = ScenarioUtils.createScenario(config);
-		scenario.getPopulation().getFactory().getRouteFactories().setRouteFactory(DefaultEnrichedTransitRoute.class,
-				new DefaultEnrichedTransitRouteFactory());
 		ScenarioUtils.loadScenario(scenario);
 
 		Network network = scenario.getNetwork();
@@ -58,7 +55,7 @@ public class RunCreateUAMPersonAttributes {
 		filter.filter(networkUAM, modes);
 
 		UAMXMLReader uamReader = new UAMXMLReader(networkUAM);
-		uamReader.readFile(ConfigGroup.getInputFileURL(config.getContext(), uamConfigGroup.getUAM()).getPath()
+		uamReader.readFile(ConfigGroup.getInputFileURL(config.getContext(), uamConfigGroup.getInputFile()).getPath()
 				.replace("%20", " "));
 		final UAMStations uamStations = new UAMStations(uamReader.getStations(), network);
 
@@ -73,8 +70,8 @@ public class RunCreateUAMPersonAttributes {
 
 					Coord originCoord = ((Activity) p).getCoord();
 
-					if (!uamConfigGroup.getStaticSearchRadius())
-						System.err.println("Warning: UAM search radius must be static = true! Setting it to static.");
+					if (uamConfigGroup.getUseDynamicSearchRadius())
+						System.err.println("Warning: UAM search radius must be dynamic = false! Setting it to static.");
 
 					Collection<UAMStation> stations = uamStations.getUAMStationsInRadius(originCoord,
 							uamConfigGroup.getSearchRadius());

@@ -1,10 +1,7 @@
 package net.bhl.matsim.uam.schedule;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import net.bhl.matsim.uam.dispatcher.UAMDispatcher;
-import net.bhl.matsim.uam.infrastructure.UAMVehicle;
-import net.bhl.matsim.uam.passenger.UAMRequest;
+import java.util.List;
+
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicle;
 import org.matsim.contrib.dvrp.optimizer.Request;
@@ -17,7 +14,12 @@ import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.mobsim.framework.events.MobsimBeforeSimStepEvent;
 import org.matsim.core.mobsim.framework.listeners.MobsimBeforeSimStepListener;
 
-import java.util.List;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import net.bhl.matsim.uam.dispatcher.UAMDispatcher;
+import net.bhl.matsim.uam.infrastructure.UAMVehicle;
+import net.bhl.matsim.uam.passenger.UAMRequest;
 
 /**
  * An optimizer for UAM vehicles schedule.
@@ -59,22 +61,22 @@ public class UAMOptimizer implements VrpOptimizer, OnlineTrackerListener, Mobsim
 		List<? extends Task> tasks = schedule.getTasks();
 		int index = currentTask.getTaskIdx() + 1;
 
-		UAMTask nextTask;
+		Task nextTask;
 		if (index < tasks.size()) {
-			nextTask = (UAMTask) tasks.get(index);
+			nextTask = tasks.get(index);
 		} else {
 			throw new IllegalStateException("A UAM schedule should never end!");
 		}
 
 		double startTime = now;
 
-		UAMTask indexTask;
+		Task indexTask;
 		// we have to adapt the times of the rest of the tasks
 		// in order to take into account any delays vehicle has experienced so far
 		while (index < tasks.size()) {
-			indexTask = (UAMTask) tasks.get(index);
+			indexTask = tasks.get(index);
 
-			if (indexTask instanceof UAMStayTask) {
+			if (indexTask.getTaskType().equals(UAMTaskType.STAY)) {
 				if (indexTask.getEndTime() < startTime)
 					indexTask.setEndTime(startTime);
 			} else {
@@ -106,9 +108,9 @@ public class UAMOptimizer implements VrpOptimizer, OnlineTrackerListener, Mobsim
 	}
 
 	private void ensureNonFinishingSchedule(Schedule schedule) {
-		UAMTask lastTask = (UAMTask) Schedules.getLastTask(schedule);
+		Task lastTask = (Task) Schedules.getLastTask(schedule);
 
-		if (!(lastTask instanceof UAMStayTask)) {
+		if (!lastTask.getTaskType().equals(UAMTaskType.STAY)) {
 			throw new IllegalStateException("A UAM schedule should always end with a STAY task");
 		}
 

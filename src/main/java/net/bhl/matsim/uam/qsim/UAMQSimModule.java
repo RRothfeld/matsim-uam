@@ -1,21 +1,10 @@
 package net.bhl.matsim.uam.qsim;
 
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import net.bhl.matsim.uam.data.UAMFleetData;
-import net.bhl.matsim.uam.dispatcher.UAMClosestRangedPreferPooledDispatcher;
-import net.bhl.matsim.uam.dispatcher.UAMDispatcher;
-import net.bhl.matsim.uam.dispatcher.UAMDispatcherListener;
-import net.bhl.matsim.uam.dispatcher.UAMManager;
-import net.bhl.matsim.uam.infrastructure.UAMVehicle;
-import net.bhl.matsim.uam.infrastructure.readers.UAMXMLReader;
-import net.bhl.matsim.uam.passenger.UAMRequestCreator;
-import net.bhl.matsim.uam.run.UAMConstants;
-import net.bhl.matsim.uam.schedule.UAMOptimizer;
-import net.bhl.matsim.uam.schedule.UAMSingleRideAppender;
-import net.bhl.matsim.uam.schedule.UAMStayTask;
-import net.bhl.matsim.uam.vrpagent.UAMActionCreator;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
@@ -27,41 +16,49 @@ import org.matsim.contrib.dvrp.passenger.PassengerEngineQSimModule;
 import org.matsim.contrib.dvrp.passenger.PassengerRequestCreator;
 import org.matsim.contrib.dvrp.run.AbstractDvrpModeQSimModule;
 import org.matsim.contrib.dvrp.run.DvrpMode;
-import org.matsim.contrib.dvrp.run.DvrpModes;
+import org.matsim.contrib.dvrp.run.DvrpQSimComponents;
+import org.matsim.contrib.dvrp.schedule.StayTask;
 import org.matsim.contrib.dvrp.tracker.OnlineTrackerListener;
 import org.matsim.contrib.dvrp.vrpagent.VrpAgentLogic.DynActionCreator;
 import org.matsim.contrib.dvrp.vrpagent.VrpAgentSourceQSimModule;
 import org.matsim.contrib.dvrp.vrpagent.VrpLeg;
 import org.matsim.contrib.dvrp.vrpagent.VrpLegFactory;
-import org.matsim.contrib.dynagent.run.DynActivityEngineModule;
 import org.matsim.core.mobsim.qsim.QSim;
-import org.matsim.core.mobsim.qsim.components.QSimComponentsConfig;
+import org.matsim.core.mobsim.qsim.components.QSimComponentsConfigurator;
 import org.matsim.core.mobsim.qsim.interfaces.DepartureHandler;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+
+import net.bhl.matsim.uam.data.UAMFleetData;
+import net.bhl.matsim.uam.dispatcher.UAMClosestRangedPreferPooledDispatcher;
+import net.bhl.matsim.uam.dispatcher.UAMDispatcher;
+import net.bhl.matsim.uam.dispatcher.UAMDispatcherListener;
+import net.bhl.matsim.uam.dispatcher.UAMManager;
+import net.bhl.matsim.uam.infrastructure.UAMVehicle;
+import net.bhl.matsim.uam.infrastructure.readers.UAMXMLReader;
+import net.bhl.matsim.uam.passenger.UAMRequestCreator;
+import net.bhl.matsim.uam.run.UAMConstants;
+import net.bhl.matsim.uam.schedule.UAMOptimizer;
+import net.bhl.matsim.uam.schedule.UAMSingleRideAppender;
+import net.bhl.matsim.uam.schedule.UAMTaskType;
+import net.bhl.matsim.uam.vrpagent.UAMActionCreator;
 
 /**
  * A MATSim Abstract Module for classes used by Qsim for UAM simulation.
  *
  * @author balacmi (Milos Balac), RRothfeld (Raoul Rothfeld)
  */
-public class UAMQsimModule extends AbstractDvrpModeQSimModule {
+public class UAMQSimModule extends AbstractDvrpModeQSimModule {
 	public final static String COMPONENT_NAME = UAMConstants.uam.toUpperCase() + "Extension";
-	private UAMManager uamManager;
-	private UAMXMLReader uamReader;
 
-	public UAMQsimModule(UAMXMLReader uamReader, UAMManager uamManager) {
+	public UAMQSimModule() {
 		super(UAMConstants.uam);
-		this.uamReader = uamReader;
-		this.uamManager = uamManager;
 	}
 
-	public static void configureComponents(QSimComponentsConfig components) {
-		DynActivityEngineModule.configureComponents(components);
-		components.addComponent(DvrpModes.mode(UAMConstants.uam));
+	static public QSimComponentsConfigurator activateModes() {
+		return DvrpQSimComponents.activateModes(UAMConstants.uam);
 	}
 
 	@Override
@@ -104,7 +101,7 @@ public class UAMQsimModule extends AbstractDvrpModeQSimModule {
 	@Provides
 	@Singleton
 	List<UAMDispatcher> provideDispatchers(UAMSingleRideAppender appender, UAMManager uamManager,
-                                           @Named(UAMConstants.uam) Network network, @DvrpMode(UAMConstants.uam) Fleet data) {
+			@DvrpMode(UAMConstants.uam) Network network, @DvrpMode(UAMConstants.uam) Fleet data) {
 
 		UAMDispatcher dispatcher = new UAMClosestRangedPreferPooledDispatcher(appender, uamManager, network, data);
 
@@ -115,7 +112,7 @@ public class UAMQsimModule extends AbstractDvrpModeQSimModule {
 
 	@Provides
 	@Singleton
-	public UAMFleetData provideData() {
+	public UAMFleetData provideData(UAMXMLReader uamReader, UAMManager uamManager) {
 		Map<Id<DvrpVehicle>, UAMVehicle> returnVehicles = new HashMap<>();
 
 		for (DvrpVehicleSpecification specification : uamReader.getFleetSpecification().getVehicleSpecifications()
@@ -129,13 +126,12 @@ public class UAMQsimModule extends AbstractDvrpModeQSimModule {
 
 		for (DvrpVehicle veh : returnVehicles.values()) {
 			// create a new Fleet every new iteration
-			veh.getSchedule()
-					.addTask(new UAMStayTask(veh.getServiceBeginTime(), Double.POSITIVE_INFINITY, veh.getStartLink()));
+			veh.getSchedule().addTask(new StayTask(UAMTaskType.STAY, veh.getServiceBeginTime(),
+					Double.POSITIVE_INFINITY, veh.getStartLink()));
 			returnVehicles.put(veh.getId(), (UAMVehicle) veh);
 		}
 
 		// populate manager here
-		uamManager.setVehicles(returnVehicles);
 		return new UAMFleetData(returnVehicles);
 	}
 

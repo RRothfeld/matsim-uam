@@ -1,12 +1,12 @@
 package net.bhl.matsim.uam.router.strategy;
 
-import ch.ethz.matsim.av.plcpc.ParallelLeastCostPathCalculator;
-import net.bhl.matsim.uam.config.UAMConfigGroup;
-import net.bhl.matsim.uam.data.UAMAccessLeg;
-import net.bhl.matsim.uam.data.UAMAccessOptions;
-import net.bhl.matsim.uam.data.UAMStationConnectionGraph;
-import net.bhl.matsim.uam.infrastructure.UAMStation;
-import net.bhl.matsim.uam.infrastructure.UAMStations;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -23,7 +23,12 @@ import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.facilities.Facility;
 import org.matsim.pt.router.TransitRouter;
 
-import java.util.*;
+import net.bhl.matsim.uam.config.UAMConfigGroup;
+import net.bhl.matsim.uam.data.UAMAccessLeg;
+import net.bhl.matsim.uam.data.UAMAccessOptions;
+import net.bhl.matsim.uam.data.UAMStationConnectionGraph;
+import net.bhl.matsim.uam.infrastructure.UAMStation;
+import net.bhl.matsim.uam.infrastructure.UAMStations;
 
 /**
  * This class provides the methods used for different UAMStrategies.
@@ -38,19 +43,17 @@ public class UAMStrategyUtils {
 	private UAMStationConnectionGraph stationConnections;
 	private Network carNetwork;
 	private TransitRouter transitRouter;
-	private ParallelLeastCostPathCalculator plcpc;
 	private LeastCostPathCalculator plcpccar;
 
 	public UAMStrategyUtils(UAMStations landingStations, UAMConfigGroup uamConfig, Scenario scenario,
 							UAMStationConnectionGraph stationConnections, Network carNetwork, TransitRouter transitRouter,
-							ParallelLeastCostPathCalculator plcpc, LeastCostPathCalculator plcpccar) {
+							LeastCostPathCalculator plcpccar) {
 		this.landingStations = landingStations;
 		this.uamConfig = uamConfig;
 		this.scenario = scenario;
 		this.stationConnections = stationConnections;
 		this.carNetwork = carNetwork;
 		this.transitRouter = transitRouter;
-		this.plcpc = plcpc;
 		this.plcpccar = plcpccar;
 	}
 
@@ -60,7 +63,7 @@ public class UAMStrategyUtils {
 	 * the config file.
 	 */
 	Collection<UAMStation> getPossibleStations(Facility fromFacility) {
-		if (!uamConfig.getStaticSearchRadius())
+		if (uamConfig.getUseDynamicSearchRadius())
 			log.error("Cannot get possible stations only with fromFacility when using non-static search radius.");
 
 		return getPossibleStations(fromFacility, null);
@@ -74,7 +77,7 @@ public class UAMStrategyUtils {
 	Collection<UAMStation> getPossibleStations(Facility fromFacility, Facility toFacility) {
 		double radius = uamConfig.getSearchRadius();
 
-		if (!uamConfig.getStaticSearchRadius())
+		if (uamConfig.getUseDynamicSearchRadius())
 			radius *= CoordUtils.calcEuclideanDistance(fromFacility.getCoord(), toFacility.getCoord());
 
 		return landingStations.getUAMStationsInRadius(fromFacility.getCoord(), radius);
@@ -89,7 +92,7 @@ public class UAMStrategyUtils {
 	 */
 	Map<Id<UAMStation>, UAMAccessOptions> getAccessOptions(boolean access, Collection<UAMStation> stations,
 														   Facility facility, double departureTime) {
-		Set<String> modes = new HashSet<>(uamConfig.getAvailableAccessModes());
+		Set<String> modes = new HashSet<>(uamConfig.getAccessEgressModes());
 		Map<Id<UAMStation>, UAMAccessOptions> accessRouteData = new HashMap<>();
 
 		for (UAMStation station : stations) {
@@ -104,6 +107,7 @@ public class UAMStrategyUtils {
 				double distance = uamAccessLeg.distance;
 				double travelTime = uamAccessLeg.travelTime;
 
+				// TODO: Does this make sense?
 				if (distance <= uamConfig.getWalkDistance() && modes.contains(TransportMode.walk))
 					continue;
 
@@ -156,13 +160,13 @@ public class UAMStrategyUtils {
 				}
 				return new UAMAccessLeg(path.travelTime, distanceByCar, path.links);
 			case TransportMode.pt:
-				if (uamConfig.getPtSimulation()) {
+				if (transitRouter != null) {
 					List<Leg> legs = transitRouter.calcRoute(new LinkWrapperFacility(from), new LinkWrapperFacility(to),
 							time, null);
 					double distanceByPt = 0.0;
 					double timeByPt = 0.0;
 					for (Leg leg : legs) {
-						timeByPt += leg.getTravelTime();
+						timeByPt += leg.getTravelTime().seconds();
 						distanceByPt += leg.getRoute().getDistance();
 					}
 					return new UAMAccessLeg(timeByPt, distanceByPt, null);
@@ -190,7 +194,7 @@ public class UAMStrategyUtils {
 	}
 
 	Set<String> getModes() {
-		return uamConfig.getAvailableAccessModes();
+		return uamConfig.getAccessEgressModes();
 	}
 
 	UAMStationConnectionGraph getStationConnections() {

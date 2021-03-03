@@ -2,6 +2,9 @@ package net.bhl.matsim.uam.qsim;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+
+import net.bhl.matsim.uam.infrastructure.readers.UAMXMLReader;
+
 import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.mobsim.qsim.qnetsimengine.linkspeedcalculator.DefaultLinkSpeedCalculator;
 
@@ -15,15 +18,6 @@ import java.util.Map;
  */
 public class UAMSpeedModule extends AbstractModule {
 
-	final private Map<String, Double> mapVehicleVerticalSpeeds;
-	final private Map<String, Double> mapVehicleHorizontalSpeeds;
-
-	public UAMSpeedModule(Map<String, Double> mapVehicleVerticalSpeeds,
-						  Map<String, Double> mapVehicleHorizontalSpeeds) {
-		this.mapVehicleVerticalSpeeds = mapVehicleVerticalSpeeds;
-		this.mapVehicleHorizontalSpeeds = mapVehicleHorizontalSpeeds;
-	}
-
 	@Override
 	public void install() {
 
@@ -31,8 +25,8 @@ public class UAMSpeedModule extends AbstractModule {
 
 	@Provides
 	@Singleton
-	public UAMLinkSpeedCalculator provideUAMLinkSpeedCalculator() {
+	public UAMLinkSpeedCalculator provideUAMLinkSpeedCalculator(UAMXMLReader uamReader) {
 		DefaultLinkSpeedCalculator delegate = new DefaultLinkSpeedCalculator();
-		return new UAMLinkSpeedCalculator(mapVehicleVerticalSpeeds, mapVehicleHorizontalSpeeds, delegate);
+		return new UAMLinkSpeedCalculator(uamReader.getMapVehicleVerticalSpeeds(), uamReader.getMapVehicleHorizontalSpeeds(), delegate);
 	}
 }

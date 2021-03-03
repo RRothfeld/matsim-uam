@@ -1,7 +1,7 @@
 package net.bhl.matsim.uam.scenario.population;
 
-import ch.ethz.matsim.baseline_scenario.transit.routing.DefaultEnrichedTransitRoute;
-import ch.ethz.matsim.baseline_scenario.transit.routing.DefaultEnrichedTransitRouteFactory;
+import java.util.Random;
+
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Population;
@@ -9,8 +9,6 @@ import org.matsim.api.core.v01.population.PopulationWriter;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-
-import java.util.Random;
 
 //Adjusted from RunPopulationDownsamplingExample.java by matsim-code-examples
 
@@ -40,8 +38,6 @@ public class RunAddPopulationAttributes {
 		config.plans().setInputFile(inputPopFilename);
 
 		Scenario scenario = ScenarioUtils.createScenario(config);
-		scenario.getPopulation().getFactory().getRouteFactories().setRouteFactory(DefaultEnrichedTransitRoute.class,
-				new DefaultEnrichedTransitRouteFactory());
 		ScenarioUtils.loadScenario(scenario);
 
 		Population pop = scenario.getPopulation();

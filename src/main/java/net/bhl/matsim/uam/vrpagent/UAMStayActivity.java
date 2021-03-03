@@ -1,7 +1,7 @@
 package net.bhl.matsim.uam.vrpagent;
 
-import net.bhl.matsim.uam.schedule.UAMStayTask;
-import org.matsim.contrib.dynagent.DynActivity;
+import org.matsim.contrib.dvrp.schedule.StayTask;
+import org.matsim.contrib.dynagent.FirstLastSimStepDynActivity;
 
 /**
  * An implementation of AbstractDynActivity for UAM DynAgents for the
@@ -9,34 +9,20 @@ import org.matsim.contrib.dynagent.DynActivity;
  *
  * @author balacmi (Milos Balac), RRothfeld (Raoul Rothfeld)
  */
-public class UAMStayActivity implements DynActivity {
-	final private UAMStayTask stayTask;
-	private final String activityType;
-	private double now;
+public class UAMStayActivity extends FirstLastSimStepDynActivity {
+	final private StayTask task;
 
-	public UAMStayActivity(UAMStayTask stayTask) {
-		activityType = stayTask.getName();
-		this.stayTask = stayTask;
-		this.now = stayTask.getBeginTime();
+	public UAMStayActivity(StayTask task, String activityType) {
+		super(activityType);
+		this.task = task;
 	}
 
 	@Override
-	public void doSimStep(double now) {
-		this.now = now;
-	}
-
-	@Override
-	public String getActivityType() {
-		return activityType;
-	}
-
-	@Override
-	public double getEndTime() {
-		if (Double.isInfinite(stayTask.getEndTime())) {
-			return now + 1;
+	protected boolean isLastStep(double now) {
+		if (Double.isInfinite(task.getEndTime())) {
+			return false;
 		} else {
-			return stayTask.getEndTime();
+			return task.getEndTime() <= now;
 		}
 	}
-
 }

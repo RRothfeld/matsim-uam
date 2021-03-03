@@ -1,21 +1,32 @@
 package net.bhl.matsim.uam.dispatcher;
 
-import com.google.inject.Inject;
-import net.bhl.matsim.uam.infrastructure.UAMStation;
-import net.bhl.matsim.uam.infrastructure.UAMVehicle;
-import net.bhl.matsim.uam.infrastructure.UAMVehicleType;
-import net.bhl.matsim.uam.passenger.UAMRequest;
-import net.bhl.matsim.uam.schedule.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicle;
 import org.matsim.contrib.dvrp.fleet.Fleet;
 import org.matsim.contrib.dvrp.schedule.Schedule;
+import org.matsim.contrib.dvrp.schedule.StayTask;
+import org.matsim.contrib.dvrp.schedule.Task;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.utils.collections.QuadTree;
 
-import java.util.*;
+import com.google.inject.Inject;
+
+import net.bhl.matsim.uam.infrastructure.UAMStation;
+import net.bhl.matsim.uam.infrastructure.UAMVehicle;
+import net.bhl.matsim.uam.infrastructure.UAMVehicleType;
+import net.bhl.matsim.uam.passenger.UAMRequest;
+import net.bhl.matsim.uam.schedule.UAMDropoffTask;
+import net.bhl.matsim.uam.schedule.UAMPickupTask;
+import net.bhl.matsim.uam.schedule.UAMSingleRideAppender;
 
 /**
  * UAM Dispatcher that allows pooled ride between passengers and uses vehicle types' range restrictions.
@@ -34,7 +45,6 @@ public class UAMClosestRangedPooledDispatcher implements UAMDispatcher {
 	@Inject
 	public UAMClosestRangedPooledDispatcher(UAMSingleRideAppender appender, UAMManager uamManager, Network network, Fleet data) {
 		this.appender = appender;
-		this.appender.setStations(uamManager.getStations());
 
 		double[] bounds = NetworkUtils.getBoundingBox(network.getNodes().values()); // minX, minY, maxX, maxY
 
@@ -68,10 +78,10 @@ public class UAMClosestRangedPooledDispatcher implements UAMDispatcher {
 	@Override
 	public void onNextTaskStarted(UAMVehicle vehicle) {
 		Schedule schedule = vehicle.getSchedule();
-		UAMTask task = (UAMTask) schedule.getCurrentTask();
+		Task task = schedule.getCurrentTask();
 
-		if (task instanceof UAMStayTask) {
-			Coord coord = ((UAMStayTask) task).getLink().getCoord();
+		if (task instanceof Task) {
+			Coord coord = ((StayTask) task).getLink().getCoord();
 			this.availableVehiclesTree.get(vehicle.getVehicleType()).put(coord.getX(), coord.getY(), vehicle);
 			this.availableVehicleLocations.put(vehicle, coord);
 			return;

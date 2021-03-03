@@ -1,13 +1,20 @@
 package net.bhl.matsim.uam.qsim;
 
+import com.google.common.base.Verify;
 import com.google.inject.Inject;
 import net.bhl.matsim.uam.events.UAMPrebookVehicle;
+import net.bhl.matsim.uam.passenger.UAMRequestCreator;
+import net.bhl.matsim.uam.qsim.UAMTripInfo.BookedRequest;
 import net.bhl.matsim.uam.run.UAMConstants;
+
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.*;
+import org.matsim.contrib.dvrp.optimizer.Request;
 import org.matsim.contrib.dvrp.passenger.PassengerEngine;
+import org.matsim.contrib.dvrp.passenger.PassengerRequest;
 import org.matsim.contrib.dvrp.run.DvrpMode;
 import org.matsim.core.mobsim.framework.MobsimAgent;
 import org.matsim.core.mobsim.framework.MobsimPassengerAgent;
@@ -34,6 +41,10 @@ public class UAMDepartureHandler implements DepartureHandler {
 
 	@Inject
 	private QSim qsim;
+	
+	@Inject
+	@DvrpMode(UAMConstants.uam)
+	Network network;
 
 	private Set<String> modesRequiringManualUAMPrebooking;
 
@@ -54,6 +65,16 @@ public class UAMDepartureHandler implements DepartureHandler {
 	public void manualUAMPrebooking(String mode, double now, Id<Person> id, Id<Link> linkId) {
 		if (modesRequiringManualUAMPrebooking.contains(mode))
 			handleDeparture(now, qsim.getAgents().get(id), linkId);
+	}	
+	
+	private void performPrebooking(Leg uamLeg, MobsimAgent agent, double departureTime, double submissionTime) {
+		Route uamRoute = uamLeg.getRoute();
+
+		Link startLink = network.getLinks().get(uamRoute.getStartLinkId());
+		Link endLink = network.getLinks().get(uamRoute.getEndLinkId());
+
+		UAMTripInfo tripInfo = new UAMTripInfo(startLink, endLink, uamRoute, departureTime);
+		passengerEngine.bookTrip((MobsimPassengerAgent) agent, tripInfo);
 	}
 
 	@Override
@@ -69,10 +90,11 @@ public class UAMDepartureHandler implements DepartureHandler {
 				final Leg accessLeg = (Leg) plan.getPlanElements().get(planElementsIndex);
 				final Leg leg = (Leg) plan.getPlanElements().get(planElementsIndex + 2);
 				Activity uam_interaction = (Activity) plan.getPlanElements().get(planElementsIndex + 1);
-				passengerEngine.prebookTrip(now, (MobsimPassengerAgent) agent, leg.getRoute().getStartLinkId(),
-						leg.getRoute().getEndLinkId(), now + uam_interaction.getMaximumDuration()
-								+ (accessLeg.getTravelTime() <= 0 ? 1 : accessLeg.getTravelTime()));
-
+				
+				performPrebooking(leg, agent,
+						now + uam_interaction.getMaximumDuration().seconds()
+								+ (accessLeg.getTravelTime().seconds() <= 0 ? 1 : accessLeg.getTravelTime().seconds()),
+						now);
 			} else if (agent.getMode().equals(TransportMode.transit_walk)
 					|| agent.getMode().equals(TransportMode.access_walk)) {
 				Plan plan = ((PlanAgent) agent).getCurrentPlan();
@@ -82,10 +104,10 @@ public class UAMDepartureHandler implements DepartureHandler {
 						double travelTime = getTravelTime(plan, planElementsIndex);
 						final Leg uamLeg = getUamLeg(plan, planElementsIndex);
 						Activity uam_interaction = (Activity) plan.getPlanElements().get(planElementsIndex + 1);
-						passengerEngine.prebookTrip(now, (MobsimPassengerAgent) agent,
-								uamLeg.getRoute().getStartLinkId(), uamLeg.getRoute().getEndLinkId(),
-								now + uam_interaction.getMaximumDuration() + (travelTime <= 0 ? 1 : travelTime));
-						bookedTrips.add(agent.getId());
+						
+						performPrebooking(uamLeg, agent,
+								now + uam_interaction.getMaximumDuration().seconds() + (travelTime <= 0 ? 1 : travelTime),
+								now);
 					}
 				}
 
@@ -117,7 +139,7 @@ public class UAMDepartureHandler implements DepartureHandler {
 				if (((Leg) pe).getMode().equals(UAMConstants.uam))
 					found = true;
 				else
-					travelTime += ((Leg) pe).getTravelTime();
+					travelTime += ((Leg) pe).getTravelTime().seconds();
 			}
 			index++;
 		}

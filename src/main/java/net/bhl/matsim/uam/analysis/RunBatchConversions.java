@@ -1,13 +1,12 @@
 package net.bhl.matsim.uam.analysis;
 
+import java.io.IOException;
+
 import net.bhl.matsim.uam.analysis.traffic.run.BatchConvertLinkStatsFromEvents;
-import net.bhl.matsim.uam.analysis.transit.run.BatchConvertTransitTripsFromEvents;
 import net.bhl.matsim.uam.analysis.trips.run.BatchConvertTripsFromEvents;
 import net.bhl.matsim.uam.analysis.trips.run.BatchConvertTripsFromPopulation;
 import net.bhl.matsim.uam.analysis.uamdemand.run.BatchConvertUAMDemandFromEvents;
 import net.bhl.matsim.uam.analysis.uamstations.run.BatchConvertUAMStationsFromUAMVehicles;
-
-import java.io.IOException;
 
 /**
  * This script takes a specific folder path and runs
@@ -27,7 +26,6 @@ public class RunBatchConversions {
 		BatchConvertUAMStationsFromUAMVehicles.main(args);
 		BatchConvertUAMDemandFromEvents.main(args);
 		BatchConvertTripsFromEvents.main(args);
-		BatchConvertTransitTripsFromEvents.main(args);
 		BatchConvertTripsFromPopulation.main(args);
 		BatchConvertLinkStatsFromEvents.main(args);
 	}

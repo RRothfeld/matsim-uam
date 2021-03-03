@@ -12,6 +12,7 @@ import org.matsim.facilities.Facility;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This strategy is used to assign to the passenger a UAMRoute based on a
@@ -37,7 +38,7 @@ public class UAMPredefinedStrategy implements UAMStrategy {
 	}
 
 	@Override
-	public UAMRoute getRoute(Person person, Facility fromFacility, Facility toFacility, double departureTime) {
+	public Optional<UAMRoute> getRoute(Person person, Facility fromFacility, Facility toFacility, double departureTime) {
 		Leg l = null;
 		List<PlanElement> elements = person.getSelectedPlan().getPlanElements();
 		for (int i = 0; i < elements.size() - 2; i += 2) {
@@ -46,7 +47,7 @@ public class UAMPredefinedStrategy implements UAMStrategy {
 			if (endingActivity.getType().equals(UAMConstants.interaction))
 				continue;
 
-			if (endingActivity.getEndTime() == departureTime) {
+			if (endingActivity.getEndTime().seconds() == departureTime) {
 				l = (Leg) elements.get(i + 1);
 				break;
 			}
@@ -85,8 +86,10 @@ public class UAMPredefinedStrategy implements UAMStrategy {
 
 		if (destinationStation == null)
 			reportMissingStation(person, definedDestinationStation, destinationStations);
+		
+		// TODO: What if non is found? Should return Optional.empty();
 
-		return new UAMRoute(accessMode, originStation, destinationStation, egressMode);
+		return Optional.of(new UAMRoute(accessMode, originStation, destinationStation, egressMode));
 	}
 
 	private void reportMissingLeg(Person person) {

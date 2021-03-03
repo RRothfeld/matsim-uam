@@ -1,11 +1,16 @@
 package net.bhl.matsim.uam.analysis.traveltimes;
 
-import ch.sbb.matsim.routing.pt.raptor.*;
-import com.opencsv.CSVParser;
-import net.bhl.matsim.uam.analysis.traveltimes.utils.ThreadCounter;
-import net.bhl.matsim.uam.analysis.traveltimes.utils.TripItem;
-import net.bhl.matsim.uam.analysis.traveltimes.utils.TripItemReader;
-import net.bhl.matsim.uam.config.UAMConfigGroup;
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -21,16 +26,20 @@ import org.matsim.core.router.TeleportationRoutingModule;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.router.TransitRouter;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import com.opencsv.CSVParser;
+
+import ch.sbb.matsim.routing.pt.raptor.DefaultRaptorIntermodalAccessEgress;
+import ch.sbb.matsim.routing.pt.raptor.DefaultRaptorParametersForPerson;
+import ch.sbb.matsim.routing.pt.raptor.DefaultRaptorStopFinder;
+import ch.sbb.matsim.routing.pt.raptor.LeastCostRaptorRouteSelector;
+import ch.sbb.matsim.routing.pt.raptor.RaptorStaticConfig;
+import ch.sbb.matsim.routing.pt.raptor.RaptorUtils;
+import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptor;
+import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorData;
+import net.bhl.matsim.uam.analysis.traveltimes.utils.ThreadCounter;
+import net.bhl.matsim.uam.analysis.traveltimes.utils.TripItem;
+import net.bhl.matsim.uam.analysis.traveltimes.utils.TripItemReader;
+import net.bhl.matsim.uam.config.UAMConfigGroup;
 
 /**
  * This script generates csv file containing estimated travel times by Pt for
@@ -75,7 +84,7 @@ public class RunCalculatePTTravelTimes {
 		for (int i = 0; i < processes; i++) {
 			Map<String, RoutingModule> router = new HashMap<>();
 			router.put(TransportMode.pt, new TeleportationRoutingModule(TransportMode.pt,
-					scenario.getPopulation().getFactory(), 0, 1.5));
+					scenario, 0, 1.5));
 			ptRouters.add(new SwissRailRaptor(data, new DefaultRaptorParametersForPerson(config),
 					new LeastCostRaptorRouteSelector(),
 					new DefaultRaptorStopFinder(null, new DefaultRaptorIntermodalAccessEgress(), router)));
@@ -170,7 +179,7 @@ public class RunCalculatePTTravelTimes {
 				for (Leg leg : legs) {
 					if (time != 0 && writeDescription)
 						routeList.append("->");
-					time += leg.getTravelTime();
+					time += leg.getTravelTime().seconds();
 					distance += leg.getRoute().getDistance();
 					if (writeDescription) {
 						routeList.append("[mode:").append(leg.getMode()).append("]");

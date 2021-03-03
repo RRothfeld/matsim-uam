@@ -10,6 +10,7 @@ import org.matsim.facilities.Facility;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -30,7 +31,7 @@ public class UAMMinTravelTimeStrategy implements UAMStrategy {
 	}
 
 	@Override
-	public UAMRoute getRoute(Person person, Facility fromFacility, Facility toFacility, double departureTime) {
+	public Optional<UAMRoute> getRoute(Person person, Facility fromFacility, Facility toFacility, double departureTime) {
 		UAMStation bestStationOrigin = null, bestStationDestination = null;
 		Collection<UAMStation> stationsOrigin = strategyUtils.getPossibleStations(fromFacility, toFacility);
 		Collection<UAMStation> stationsDestination = strategyUtils.getPossibleStations(toFacility, fromFacility);
@@ -68,7 +69,9 @@ public class UAMMinTravelTimeStrategy implements UAMStrategy {
 			}
 		}
 		
-		return new UAMRoute(accessRoutesData.get(bestStationOrigin.getId()).getFastestTimeMode(), bestStationOrigin,
-				bestStationDestination, bestModeEgress);
+		// TODO: What if non is found? Should return Optional.empty();
+		
+		return Optional.of(new UAMRoute(accessRoutesData.get(bestStationOrigin.getId()).getFastestTimeMode(), bestStationOrigin,
+				bestStationDestination, bestModeEgress));
 	}
 }

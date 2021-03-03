@@ -1,32 +1,31 @@
 package net.bhl.matsim.uam.run;
 
-import ch.ethz.matsim.baseline_scenario.config.CommandLine;
-import ch.ethz.matsim.baseline_scenario.config.CommandLine.ConfigurationException;
-import ch.ethz.matsim.baseline_scenario.transit.routing.DefaultEnrichedTransitRoute;
-import ch.ethz.matsim.baseline_scenario.transit.routing.DefaultEnrichedTransitRouteFactory;
-import ch.ethz.matsim.baseline_scenario.transit.simulation.BaselineTransitModule;
-import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
-import net.bhl.matsim.uam.config.UAMConfigGroup;
-import net.bhl.matsim.uam.dispatcher.UAMManager;
-import net.bhl.matsim.uam.infrastructure.UAMStations;
-import net.bhl.matsim.uam.infrastructure.readers.UAMXMLReader;
-import net.bhl.matsim.uam.qsim.UAMQsimModule;
-import net.bhl.matsim.uam.qsim.UAMSpeedModule;
-import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.network.Network;
-import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
-import org.matsim.contrib.dvrp.trafficmonitoring.DvrpTravelTimeModule;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigGroup;
-import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.controler.Controler;
-import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
-import org.matsim.core.scenario.ScenarioUtils;
-
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.network.NetworkFactory;
+import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
+import org.matsim.contrib.dvrp.run.DvrpModule;
+import org.matsim.contribs.discrete_mode_choice.modules.config.DiscreteModeChoiceConfigGroup;
+import org.matsim.core.config.CommandLine;
+import org.matsim.core.config.CommandLine.ConfigurationException;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
+import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ModeParams;
+import org.matsim.core.config.groups.QSimConfigGroup.StarttimeInterpretation;
+import org.matsim.core.controler.Controler;
+import org.matsim.core.scenario.ScenarioUtils;
+
+import ch.sbb.matsim.routing.pt.raptor.SwissRailRaptorModule;
+import net.bhl.matsim.uam.config.UAMConfigGroup;
+import net.bhl.matsim.uam.qsim.UAMQSimModule;
+import net.bhl.matsim.uam.qsim.UAMSpeedModule;
 
 /**
  * The RunUAMScenario program start a MATSim run including Urban Air Mobility
@@ -52,9 +51,7 @@ public class RunUAMScenario {
 
 	public static void parseArguments(String[] args) {
 		try {
-			cmd = new CommandLine.Builder(args)
-					.allowOptions("config-path")
-					.build();
+			cmd = new CommandLine.Builder(args).allowOptions("config-path").build();
 
 			if (cmd.hasOption("config-path"))
 				path = cmd.getOption("config-path").get();
@@ -91,51 +88,98 @@ public class RunUAMScenario {
 			e.printStackTrace();
 		}
 
-		scenario.getPopulation().getFactory().getRouteFactories().setRouteFactory(DefaultEnrichedTransitRoute.class,
-				new DefaultEnrichedTransitRouteFactory());
 		controler = new Controler(scenario);
+
+		/**
+		 * TESTING START TODO
+		 */
+
+		UAMConfigGroup uamConfig = (UAMConfigGroup) config.getModules().get(UAMConfigGroup.GROUP_NAME);
+		uamConfig.setInputFile("uam_network.xml");
+
+		uamConfig.setAccessEgressModesAsString("car");
+		uamConfig.setSearchRadius(1e5);
+
+		/** TESTING END */
 
 		// Initiate Urban Air Mobility XML reading and parsing
 		Network network = controler.getScenario().getNetwork();
-		TransportModeNetworkFilter filter = new TransportModeNetworkFilter(network);
-		Set<String> modes = new HashSet<>();
-		modes.add(UAMConstants.uam);
-		Network networkUAM = NetworkUtils.createNetwork();
-		filter.filter(networkUAM, modes);
 
-		filter = new TransportModeNetworkFilter(network);
-		Set<String> modesCar = new HashSet<>();
-		modesCar.add(TransportMode.car);
-		Network networkCar = NetworkUtils.createNetwork();
-		filter.filter(networkCar, modesCar);
+		/* TESTING START */
 
-		// set up the UAM infrastructure
-		UAMXMLReader uamReader = new UAMXMLReader(networkUAM);
+		NetworkFactory factory = network.getFactory();
 
-		uamReader.readFile(ConfigGroup.getInputFileURL(controler.getConfig().getContext(), uamConfigGroup.getUAM())
-				.getPath().replace("%20", " "));
-		final UAMStations uamStations = new UAMStations(uamReader.getStations(), network);
-		final UAMManager uamManager = new UAMManager(network);
+		Link hubAjaccio = network.getLinks().get(Id.createLinkId("62245"));
+		Link hubBastia = network.getLinks().get(Id.createLinkId("15431"));
 
-		// populate UAMManager
-		uamManager.setStations(uamStations);
-		uamManager.setVehicles(uamReader.getVehicles());
+		Set<String> linkModes = new HashSet<>(hubAjaccio.getAllowedModes());
+		linkModes.add("uam");
+		hubAjaccio.setAllowedModes(linkModes);
+
+		linkModes = new HashSet<>(hubBastia.getAllowedModes());
+		linkModes.add("uam");
+		hubBastia.setAllowedModes(linkModes);
+
+		Link uam1 = factory.createLink(Id.createLinkId("uam1"), hubAjaccio.getToNode(), hubBastia.getFromNode());
+		Link uam2 = factory.createLink(Id.createLinkId("uam2"), hubBastia.getToNode(), hubAjaccio.getFromNode());
+
+		uam1.setAllowedModes(Collections.singleton("uam"));
+		uam2.setAllowedModes(Collections.singleton("uam"));
+
+		network.addLink(hubAjaccio);
+		network.addLink(hubBastia);
+		network.addLink(uam1);
+		network.addLink(uam2);
+
+		hubAjaccio.getAttributes().putAttribute("type", "uam_horizontal");
+		hubBastia.getAttributes().putAttribute("type", "uam_horizontal");
+		uam1.getAttributes().putAttribute("type", "uam_horizontal");
+		uam2.getAttributes().putAttribute("type", "uam_horizontal");
+		
+		uam1.setFreespeed(100.0);
+		uam2.setFreespeed(100.0);
+		uam1.setCapacity(1000000.0);
+		uam2.setCapacity(1000000.0);
+
+		/* TESTING END */
 
 		// sets transit modules in case of simulating/not pT
-		controler.getConfig().transit().setUseTransit(uamConfigGroup.getPtSimulation());
+		/*controler.getConfig().transit().setUseTransit(uamConfigGroup.getPtSimulation());
 		if (uamConfigGroup.getPtSimulation()) {
 			controler.addOverridingModule(new SwissRailRaptorModule());
-			controler.addOverridingModule(new BaselineTransitModule());
-		}
+			// controler.addOverridingModule(new BaselineTransitModule());
+		}*/
 
-		controler.addOverridingModule(new UAMModule(uamManager, networkUAM, networkCar, uamReader));
-		controler.addOverridingModule(new UAMSpeedModule(uamReader.getMapVehicleVerticalSpeeds(),
-				uamReader.getMapVehicleHorizontalSpeeds()));
-		controler.addOverridingModule(new DvrpTravelTimeModule());
+		controler.addOverridingModule(new DvrpModule());
+
+		controler.addOverridingModule(new UAMModule());
+		controler.addOverridingModule(new UAMSpeedModule());
+		// controler.addOverridingModule(new DvrpTravelTimeModule());
 
 		controler.configureQSimComponents(configurator -> {
-			UAMQsimModule.configureComponents(configurator);
+			UAMQSimModule.activateModes().configure(configurator);
 		});
+
+		// TODO: Did this for testing 11 Feb
+		controler.getConfig().transit().setUseTransit(true);
+		controler.getConfig().transit().setUsingTransitInMobsim(false);
+		controler.getConfig().qsim().setSimStarttimeInterpretation(StarttimeInterpretation.onlyUseStarttime);
+		controler.getConfig().qsim().setStartTime(0.0);
+
+		DvrpConfigGroup.get(config).setNetworkModesAsString("uam");
+		config.getModules().remove(DiscreteModeChoiceConfigGroup.GROUP_NAME);
+		config.getModules().remove("eqasim");
+		config.getModules().remove("eqasim:calibration");
+		config.getModules().remove("swissRailRaptor");
+
+		config.planCalcScore().addModeParams(new ModeParams("access_uam_car"));
+		config.planCalcScore().addModeParams(new ModeParams("egress_uam_car"));
+		config.planCalcScore().addModeParams(new ModeParams("uam"));
+		config.planCalcScore()
+				.addActivityParams(new ActivityParams("uam_interaction").setScoringThisActivityAtAll(false));
+
+		config.controler().setWriteEventsInterval(1);
+		
 		return controler;
 	}
 }

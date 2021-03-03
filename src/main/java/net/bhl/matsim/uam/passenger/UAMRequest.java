@@ -1,15 +1,15 @@
 package net.bhl.matsim.uam.passenger;
 
-import net.bhl.matsim.uam.dispatcher.UAMDispatcher;
-import net.bhl.matsim.uam.run.UAMConstants;
-import net.bhl.matsim.uam.schedule.UAMDropoffTask;
-import net.bhl.matsim.uam.schedule.UAMPickupTask;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.dvrp.optimizer.Request;
 import org.matsim.contrib.dvrp.passenger.PassengerRequest;
-import org.matsim.core.mobsim.framework.MobsimPassengerAgent;
+
+import net.bhl.matsim.uam.dispatcher.UAMDispatcher;
+import net.bhl.matsim.uam.run.UAMConstants;
+import net.bhl.matsim.uam.schedule.UAMDropoffTask;
+import net.bhl.matsim.uam.schedule.UAMPickupTask;
 
 /**
  * This class defines the UAM Request and its properties.
@@ -21,7 +21,7 @@ public class UAMRequest implements PassengerRequest {
 	final private double submissionTime;
 	final private Link originLink;
 	final private Link destinationLink;
-	final private MobsimPassengerAgent passengerAgent;
+	final private Id<Person> passengerId;
 	private final double quantity;
 	private final double earliestStartTime;
 	private final double latestStartTime;
@@ -30,8 +30,8 @@ public class UAMRequest implements PassengerRequest {
 	private UAMDispatcher dispatcher;
 	private double distance;
 
-	public UAMRequest(Id<Request> id, MobsimPassengerAgent passengerAgent, Link originLink, Link destinationLink,
-                      double pickupTime, double submissionTime, UAMDispatcher dispatcher, double distance) {
+	public UAMRequest(Id<Request> id, Id<Person> passengerId, Link originLink, Link destinationLink, double pickupTime,
+			double submissionTime, UAMDispatcher dispatcher, double distance) {
 		this.id = id;
 		this.submissionTime = submissionTime;
 		this.quantity = 1.0;
@@ -39,7 +39,7 @@ public class UAMRequest implements PassengerRequest {
 		this.destinationLink = destinationLink;
 		this.earliestStartTime = pickupTime;
 		this.latestStartTime = pickupTime;
-		this.passengerAgent = passengerAgent;
+		this.passengerId = passengerId;
 		this.dispatcher = dispatcher;
 		this.distance = distance;
 	}
@@ -64,23 +64,13 @@ public class UAMRequest implements PassengerRequest {
 	}
 
 	@Override
-	public boolean isRejected() {
-		return false;
-	}
-
-	@Override
-	public void setRejected(boolean rejected) {
-		// do nothing
-	}
-
-	@Override
 	public Id<Request> getId() {
 		return this.id;
 	}
 
 	@Override
 	public Id<Person> getPassengerId() {
-		return passengerAgent.getId();
+		return passengerId;
 	}
 
 	@Override
@@ -91,10 +81,6 @@ public class UAMRequest implements PassengerRequest {
 	@Override
 	public Link getToLink() {
 		return this.destinationLink;
-	}
-
-	public MobsimPassengerAgent getPassenger() {
-		return this.passengerAgent;
 	}
 
 	@Override

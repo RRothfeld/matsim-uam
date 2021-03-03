@@ -1,16 +1,21 @@
 package net.bhl.matsim.uam.listeners;
 
-import com.google.inject.Inject;
-import net.bhl.matsim.uam.run.UAMConstants;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 import org.apache.log4j.Logger;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigGroup;
 import org.matsim.core.controler.OutputDirectoryHierarchy;
 import org.matsim.core.controler.events.ShutdownEvent;
 import org.matsim.core.controler.listener.ShutdownListener;
 import org.matsim.core.utils.io.IOUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.google.inject.Inject;
+
+import net.bhl.matsim.uam.config.UAMConfigGroup;
 
 /**
  * This listener copies the input UAM Vehicle file into the output folder after
@@ -21,8 +26,15 @@ import java.io.OutputStream;
 
 public class UAMShutdownListener implements ShutdownListener {
 	private static final Logger log = Logger.getLogger(UAMListener.class);
+
 	@Inject
 	private OutputDirectoryHierarchy controlerIO;
+
+	@Inject
+	private Config config;
+
+	@Inject
+	private UAMConfigGroup uamConfig;
 
 	@Override
 	public void notifyShutdown(ShutdownEvent event) {
@@ -30,27 +42,18 @@ public class UAMShutdownListener implements ShutdownListener {
 	}
 
 	private void writeUAMVehiclesFile(ShutdownEvent event) {
-		String configPath = event.getServices().getConfig().getContext().getPath();
-		int index = configPath.lastIndexOf('/');
-		configPath = configPath.substring(0, index + 1).replace("%20", " ");
-
-		String uamFileName = event.getServices().getConfig().getModules().get(UAMConstants.uam).getParams().get("inputUAMFile");
-
-		InputStream fromStream = IOUtils.getInputStream(configPath + uamFileName);
-		OutputStream toStream = IOUtils.getOutputStream(controlerIO.getOutputFilename("output_uam_vehicles.xml.gz"));
-
 		try {
-			try {
-				IOUtils.copyStream(fromStream, toStream);
-			} catch (IOException ee) {
-				log.warn("writing output UAM Vehicles did not work; probably parameters were such that no events were "
-						+ "generated in the final iteration");
-			}
+			InputStream fromStream = IOUtils
+					.getInputStream(ConfigGroup.getInputFileURL(config.getContext(), uamConfig.getInputFile()));
+			OutputStream toStream = IOUtils.getOutputStream(
+					new File(controlerIO.getOutputFilename("output_uam_vehicles.xml.gz")).toURI().toURL(), false);
+			IOUtils.copyStream(fromStream, toStream);
 
 			fromStream.close();
 			toStream.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.warn("writing output UAM Vehicles did not work; probably parameters were such that no events were "
+					+ "generated in the final iteration");
 		}
 	}
 }

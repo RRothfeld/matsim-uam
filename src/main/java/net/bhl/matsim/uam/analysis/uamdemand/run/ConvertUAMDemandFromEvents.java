@@ -1,24 +1,22 @@
 package net.bhl.matsim.uam.analysis.uamdemand.run;
 
-import net.bhl.matsim.uam.analysis.uamdemand.CSVUAMDemandWriter;
-import net.bhl.matsim.uam.analysis.uamdemand.UAMDemandItem;
-import net.bhl.matsim.uam.analysis.uamdemand.listeners.UAMListener;
-import net.bhl.matsim.uam.analysis.uamdemand.readers.EventsUAMReader;
-import net.bhl.matsim.uam.router.UAMMainModeIdentifier;
-import net.bhl.matsim.uam.run.UAMConstants;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.router.MainModeIdentifier;
 import org.matsim.core.router.MainModeIdentifierImpl;
-import org.matsim.core.router.StageActivityTypes;
-import org.matsim.core.router.StageActivityTypesImpl;
-import org.matsim.pt.PtConstants;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
+import net.bhl.matsim.uam.analysis.uamdemand.CSVUAMDemandWriter;
+import net.bhl.matsim.uam.analysis.uamdemand.UAMDemandItem;
+import net.bhl.matsim.uam.analysis.uamdemand.listeners.UAMListener;
+import net.bhl.matsim.uam.analysis.uamdemand.readers.EventsUAMReader;
+import net.bhl.matsim.uam.router.UAMMainModeIdentifier;
+import net.bhl.matsim.uam.run.UAMConstants;
 
 /**
  * This script generates a UAMDemand csv file containing UAMDemand data.
@@ -39,15 +37,11 @@ public class ConvertUAMDemandFromEvents {
 		Network netw = NetworkUtils.createNetwork();
 		new MatsimNetworkReader(netw).readFile(network);
 
-		// Add UAM stage activity types
-		StageActivityTypes stageActivityTypes = new StageActivityTypesImpl(PtConstants.TRANSIT_ACTIVITY_TYPE,
-				UAMConstants.interaction);
-
 		MainModeIdentifier mainModeIdentifier = new UAMMainModeIdentifier(new MainModeIdentifierImpl());
 		Collection<String> networkRouteModes = Arrays.asList(TransportMode.car, UAMConstants.uam,
 				UAMConstants.access + TransportMode.car, UAMConstants.egress + TransportMode.car);
 
-		UAMListener uamListener = new UAMListener(netw, uamVehicles, stageActivityTypes, mainModeIdentifier,
+		UAMListener uamListener = new UAMListener(netw, uamVehicles, mainModeIdentifier,
 				networkRouteModes);
 		Collection<UAMDemandItem> uamData = new EventsUAMReader(uamListener).readUAMData(events);
 

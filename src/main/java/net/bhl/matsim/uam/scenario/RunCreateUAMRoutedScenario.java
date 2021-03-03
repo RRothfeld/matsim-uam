@@ -1,11 +1,18 @@
 package net.bhl.matsim.uam.scenario;
 
-import ch.ethz.matsim.av.plcpc.DefaultParallelLeastCostPathCalculator;
-import com.google.common.collect.Iterables;
-import net.bhl.matsim.uam.router.UAMFlightSegments;
-import net.bhl.matsim.uam.router.strategy.UAMStrategy;
-import net.bhl.matsim.uam.run.UAMConstants;
-import net.bhl.matsim.uam.scenario.utils.ConfigAddUAMParameters;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -24,6 +31,7 @@ import org.matsim.core.network.algorithms.NetworkCleaner;
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.router.DijkstraFactory;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
+import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.LeastCostPathCalculator.Path;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -32,13 +40,12 @@ import org.matsim.core.utils.collections.Tuple;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.core.utils.io.MatsimXmlWriter;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import com.google.common.collect.Iterables;
+
+import net.bhl.matsim.uam.router.UAMFlightSegments;
+import net.bhl.matsim.uam.router.strategy.UAMStrategy;
+import net.bhl.matsim.uam.run.UAMConstants;
+import net.bhl.matsim.uam.scenario.utils.ConfigAddUAMParameters;
 
 /**
  * This script creates UAM-including MATSim network and corresponding
@@ -317,8 +324,7 @@ public class RunCreateUAMRoutedScenario {
 
 		int routers = Runtime.getRuntime().availableProcessors();
 		TravelTime travelTime = new FreeSpeedTravelTime();
-		DefaultParallelLeastCostPathCalculator router = DefaultParallelLeastCostPathCalculator.create(routers,
-				new DijkstraFactory(), networkUAM, new OnlyTimeDependentTravelDisutility(travelTime), travelTime);
+		LeastCostPathCalculator uamPathCalculator = new DijkstraFactory().createPathCalculator(networkUAM, new OnlyTimeDependentTravelDisutility(travelTime), travelTime);
 
 		FileWriter csvWriter = new FileWriter(filename);
 		csvWriter.append("fromStation,fromNode,toStation,toNode,cruisedistance,vtoldistance\n");
@@ -329,12 +335,12 @@ public class RunCreateUAMRoutedScenario {
 					continue;
 
 				// calculate distance
-				Future<Path> path = router.calcLeastCostPath(networkUAM.getNodes().get(uamStationOrigin),
+				Path path = uamPathCalculator.calcLeastCostPath(networkUAM.getNodes().get(uamStationOrigin),
 						networkUAM.getNodes().get(uamStationDestination), 0.0, null, null);
 
 				double cruisedistance = 0;
 				double vtoldistance = 0;
-				for (Link link : path.get().links) {
+				for (Link link : path.links) {
 					if (link.getId().toString().contains(name_uam_vertical_link))
 						vtoldistance += link.getLength();
 
@@ -353,8 +359,6 @@ public class RunCreateUAMRoutedScenario {
 						.append("\n");
 			}
 		}
-
-		router.close();
 
 		csvWriter.flush();
 		csvWriter.close();

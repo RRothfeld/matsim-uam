@@ -1,8 +1,10 @@
 package net.bhl.matsim.uam.dispatcher;
 
-import net.bhl.matsim.uam.infrastructure.UAMStation;
-import net.bhl.matsim.uam.infrastructure.UAMStations;
-import net.bhl.matsim.uam.infrastructure.UAMVehicle;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
@@ -13,10 +15,9 @@ import org.matsim.core.controler.listener.IterationStartsListener;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.utils.collections.QuadTree;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import net.bhl.matsim.uam.infrastructure.UAMStation;
+import net.bhl.matsim.uam.infrastructure.UAMStations;
+import net.bhl.matsim.uam.infrastructure.UAMVehicle;
 
 /**
  * A class that stores information about UAM infrastructure and manages its
@@ -35,30 +36,22 @@ public class UAMManager implements IterationStartsListener {
 	private QuadTree<UAMStation> stationsTree;
 	private Map<Id<DvrpVehicle>, UAMVehicle> vehicles = new HashMap<>();
 
-	private Map<Id<Person>, UAMVehicle> vehiclePersonmap = new HashMap<>();
-
 	private Network network;
 
-	public UAMManager(Network network) {
+	public UAMManager(Network network, UAMStations stations, Map<Id<DvrpVehicle>, UAMVehicle> vehicles) {
 		this.network = network;
+		this.stations = stations;
+		this.vehicles = vehicles;
 	}
 
 	public UAMStations getStations() {
 		return stations;
 	}
 
-	public void setStations(UAMStations stations) {
-		this.stations = stations;
-	}
-
 	public Map<Id<DvrpVehicle>, UAMVehicle> getVehicles() {
 		return vehicles;
 	}
-
-	public void setVehicles(Map<Id<DvrpVehicle>, UAMVehicle> vehicles) {
-		this.vehicles = vehicles;
-	}
-
+	
 	/**
 	 * Initialize all datasets.
 	 */
@@ -71,11 +64,10 @@ public class UAMManager implements IterationStartsListener {
 		availableVehicles = new HashSet<>();
 
 		vehicleLocations = new HashMap<>();
-		vehiclePersonmap = new HashMap<>();
 
 		for (UAMStation station : stations.getUAMStations().values()) {
-			stationsTree.put(station.getLocationLink().getCoord().getX(),
-					station.getLocationLink().getCoord().getY(), station);
+			stationsTree.put(station.getLocationLink().getCoord().getX(), station.getLocationLink().getCoord().getY(),
+					station);
 		}
 
 		for (UAMVehicle vehicle : vehicles.values()) {

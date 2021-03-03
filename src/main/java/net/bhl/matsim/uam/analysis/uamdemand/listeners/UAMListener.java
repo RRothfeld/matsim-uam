@@ -1,11 +1,13 @@
 package net.bhl.matsim.uam.analysis.uamdemand.listeners;
 
-import net.bhl.matsim.uam.analysis.uamdemand.UAMDemandItem;
-import net.bhl.matsim.uam.infrastructure.UAMStation;
-import net.bhl.matsim.uam.infrastructure.UAMStations;
-import net.bhl.matsim.uam.infrastructure.UAMVehicle;
-import net.bhl.matsim.uam.infrastructure.readers.UAMXMLReader;
-import net.bhl.matsim.uam.run.UAMConstants;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.TransportMode;
@@ -24,12 +26,16 @@ import org.matsim.contrib.dvrp.fleet.DvrpVehicle;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter;
 import org.matsim.core.router.MainModeIdentifier;
-import org.matsim.core.router.StageActivityTypes;
+import org.matsim.core.router.TripStructureUtils;
 import org.matsim.pt.PtConstants;
 import org.matsim.vehicles.Vehicle;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import net.bhl.matsim.uam.analysis.uamdemand.UAMDemandItem;
+import net.bhl.matsim.uam.infrastructure.UAMStation;
+import net.bhl.matsim.uam.infrastructure.UAMStations;
+import net.bhl.matsim.uam.infrastructure.UAMVehicle;
+import net.bhl.matsim.uam.infrastructure.readers.UAMXMLReader;
+import net.bhl.matsim.uam.run.UAMConstants;
 
 /**
  * A listener that retrieves information from UAMtrip events.
@@ -38,7 +44,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class UAMListener implements ActivityStartEventHandler, PersonDepartureEventHandler, PersonArrivalEventHandler,
 		PersonEntersVehicleEventHandler {
-	final private StageActivityTypes stageActivityTypes;
 	final private Network network;
 	final private Collection<UAMDemandItem> uamData = new LinkedList<>();
 	final private Map<Id<Person>, UAMListenerItem> ongoing = new HashMap<>();
@@ -50,10 +55,9 @@ public class UAMListener implements ActivityStartEventHandler, PersonDepartureEv
 	UAMXMLReader uamReader;
 	TransportModeNetworkFilter filter;
 
-	public UAMListener(Network network, String uamConfigFile, StageActivityTypes stageActivityTypes,
+	public UAMListener(Network network, String uamConfigFile,
 					   MainModeIdentifier mainModeIdentifier, Collection<String> networkRouteModes) {
 		this.network = network;
-		this.stageActivityTypes = stageActivityTypes;
 		Set<String> modes = new HashSet<>();
 		modes.add(UAMConstants.uam);
 		Network networkUAM = NetworkUtils.createNetwork();
@@ -180,7 +184,7 @@ public class UAMListener implements ActivityStartEventHandler, PersonDepartureEv
 			tempPTData.remove(event.getPersonId());
 		}
 		// if it is not an stage activity it is the end of a trip
-		if (!stageActivityTypes.isStageActivity(event.getActType()) && ongoing.containsKey(event.getPersonId())) {
+		if (!TripStructureUtils.isStageActivityType(event.getActType()) && ongoing.containsKey(event.getPersonId())) {
 			UAMDemandItem uamItem = ongoing.remove(event.getPersonId());
 			this.uamData.add(uamItem);
 		}

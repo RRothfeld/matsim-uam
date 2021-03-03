@@ -1,6 +1,9 @@
 package net.bhl.matsim.uam.router.strategy;
 
 import net.bhl.matsim.uam.data.UAMRoute;
+
+import java.util.Optional;
+
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.facilities.Facility;
 
@@ -16,7 +19,7 @@ public interface UAMStrategy {
 	/**
 	 * @return The UAMRoute for the passenger based on the selected UAMStrategy
 	 */
-	UAMRoute getRoute(Person person, Facility fromFacility, Facility toFacility, double departureTime);
+	Optional<UAMRoute> getRoute(Person person, Facility fromFacility, Facility toFacility, double departureTime);
 
 	enum UAMStrategyType {
 		MINTRAVELTIME, MINACCESSTRAVELTIME, MINDISTANCE, MINACCESSDISTANCE, PREDEFINED

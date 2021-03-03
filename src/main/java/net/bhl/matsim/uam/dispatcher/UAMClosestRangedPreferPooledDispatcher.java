@@ -12,6 +12,8 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicle;
 import org.matsim.contrib.dvrp.fleet.Fleet;
 import org.matsim.contrib.dvrp.schedule.Schedule;
+import org.matsim.contrib.dvrp.schedule.StayTask;
+import org.matsim.contrib.dvrp.schedule.Task;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.utils.collections.QuadTree;
 
@@ -34,7 +36,6 @@ public class UAMClosestRangedPreferPooledDispatcher implements UAMDispatcher {
 	@Inject
 	public UAMClosestRangedPreferPooledDispatcher(UAMSingleRideAppender appender, UAMManager uamManager, Network network, Fleet data) {
 		this.appender = appender;
-		this.appender.setStations(uamManager.getStations());
 
 		double[] bounds = NetworkUtils.getBoundingBox(network.getNodes().values()); // minX, minY, maxX, maxY
 
@@ -68,10 +69,10 @@ public class UAMClosestRangedPreferPooledDispatcher implements UAMDispatcher {
 	@Override
 	public void onNextTaskStarted(UAMVehicle vehicle) {
 		Schedule schedule = vehicle.getSchedule();
-		UAMTask task = (UAMTask) schedule.getCurrentTask();
+		Task task = schedule.getCurrentTask();
 
-		if (task instanceof UAMStayTask) {
-			Coord coord = ((UAMStayTask) task).getLink().getCoord();
+		if (task.getTaskType().equals(UAMTaskType.STAY)) {
+			Coord coord = ((StayTask) task).getLink().getCoord();
 			this.availableVehiclesTree.get(vehicle.getVehicleType()).put(coord.getX(), coord.getY(), vehicle);
 			this.availableVehicleLocations.put(vehicle, coord);
 			return;

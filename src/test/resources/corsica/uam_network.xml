@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE uam SYSTEM "uam.dtd">
+<uam>
+  <stations>
+    <station
+      id="Ajaccio"
+      preflighttime="60.0"
+      postflighttime="60.0"
+      defaultwaittime="60.0"
+      link="62245"
+    />
+    <station
+      id="Bastia"
+      preflighttime="60.0"
+      postflighttime="60.0"
+      defaultwaittime="60.0"
+      link="15431"
+    />
+  </stations>
+  <vehicleTypes>
+    <vehicleType
+      id="standard"
+      capacity="1"
+      range="900000000"
+      cruisespeed="100"
+      verticalspeed="100"
+      boardingtime="60"
+      deboardingtime="60"
+      turnaroundtime="60"
+    />
+  </vehicleTypes>
+  <vehicles>
+    <vehicle id="veh1" initialstation="Ajaccio" type="standard" starttime="0.0" endtime="108000.0" />
+    <vehicle id="veh2" initialstation="Ajaccio" type="standard" starttime="0.0" endtime="108000.0" />
+    <vehicle id="veh3" initialstation="Bastia" type="standard" starttime="0.0" endtime="108000.0" />
+    <vehicle id="veh4" initialstation="Bastia" type="standard" starttime="0.0" endtime="108000.0" />
+  </vehicles>
+</uam>

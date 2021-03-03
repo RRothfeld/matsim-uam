@@ -1,7 +1,9 @@
 package net.bhl.matsim.uam.analysis.trips.readers;
 
-import net.bhl.matsim.uam.analysis.trips.TripItem;
-import net.bhl.matsim.uam.analysis.trips.utils.HomeActivityTypes;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -15,14 +17,12 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.population.io.PopulationReader;
 import org.matsim.core.population.routes.NetworkRoute;
 import org.matsim.core.router.MainModeIdentifier;
-import org.matsim.core.router.StageActivityTypes;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordUtils;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import net.bhl.matsim.uam.analysis.trips.TripItem;
+import net.bhl.matsim.uam.analysis.trips.utils.HomeActivityTypes;
 
 /**
  * A reader for trips based on a population file (plans file).
@@ -31,14 +31,12 @@ import java.util.List;
  */
 public class PopulationTripReader {
 	final private Network network;
-	final private StageActivityTypes stageActivityTypes;
 	final private HomeActivityTypes homeActivityTypes;
 	final private MainModeIdentifier mainModeIdentifier;
 
-	public PopulationTripReader(Network network, StageActivityTypes stageActivityTypes,
-								HomeActivityTypes homeActivityTypes, MainModeIdentifier mainModeIdentifier) {
+	public PopulationTripReader(Network network, HomeActivityTypes homeActivityTypes,
+			MainModeIdentifier mainModeIdentifier) {
 		this.network = network;
-		this.stageActivityTypes = stageActivityTypes;
 		this.homeActivityTypes = homeActivityTypes;
 		this.mainModeIdentifier = mainModeIdentifier;
 	}
@@ -54,8 +52,7 @@ public class PopulationTripReader {
 		List<TripItem> tripItems = new LinkedList<>();
 
 		for (Person person : population.getPersons().values()) {
-			List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(person.getSelectedPlan(),
-					stageActivityTypes);
+			List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(person.getSelectedPlan());
 
 			int personTripIndex = 0;
 
@@ -65,9 +62,10 @@ public class PopulationTripReader {
 				List<Leg> legs = trip.getLegsOnly();
 
 				tripItems.add(new TripItem(person.getId(), personTripIndex, trip.getOriginActivity().getCoord(),
-						trip.getDestinationActivity().getCoord(), trip.getOriginActivity().getEndTime(),
-						legs.get(legs.size() - 1).getDepartureTime() + legs.get(legs.size() - 1).getTravelTime()
-								- legs.get(0).getDepartureTime(),
+						trip.getDestinationActivity().getCoord(), trip.getOriginActivity().getEndTime().seconds(),
+						legs.get(legs.size() - 1).getDepartureTime().seconds()
+								+ legs.get(legs.size() - 1).getTravelTime().seconds()
+								- legs.get(0).getDepartureTime().seconds(),
 						getNetworkDistance(trip) / 1000.0, mainModeIdentifier.identifyMainMode(trip.getTripElements()),
 						trip.getOriginActivity().getType(), trip.getDestinationActivity().getType(), isHomeTrip,
 						CoordUtils.calcEuclideanDistance(trip.getOriginActivity().getCoord(),
