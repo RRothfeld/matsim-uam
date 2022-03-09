@@ -1,5 +1,6 @@
 package net.bhl.matsim.uam.router.strategy;
 
+import net.bhl.matsim.uam.data.UAMAccessLeg;
 import net.bhl.matsim.uam.data.UAMAccessOptions;
 import net.bhl.matsim.uam.data.UAMRoute;
 import net.bhl.matsim.uam.infrastructure.UAMStation;
@@ -59,8 +60,11 @@ public class UAMMinDistanceStrategy implements UAMStrategy {
 				//Calculates the shortest path
 				for (String mode : modes) {
 					//Calculates the distance for the egress routes using updated departureTime
-					double egressDistance = strategyUtils.estimateAccessLeg(false, toFacility,
-							currentDepartureTime, stationDestination, mode).distance;
+					UAMAccessLeg egressLeg = strategyUtils.estimateAccessLeg(false, toFacility, currentDepartureTime,
+							stationDestination, mode);
+					if (egressLeg == null)
+						continue;
+					double egressDistance = egressLeg.distance;
 					double totalDistance = accessRoutesData.get(stationOrigin.getId()).getShortestAccessDistance() + flyDistance + egressDistance;
 					if (totalDistance < minTotalDistance) {
 						minTotalDistance = totalDistance;

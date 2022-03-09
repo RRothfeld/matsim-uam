@@ -305,7 +305,7 @@ public class RunCreateUAMRoutedScenario {
 		configWriter.write(path + "\\" + UAMConstants.uam + "_config.xml");
 
 		// WRITE UAM NETWORK
-		network.setName((network.getName().isEmpty() ? "" : network.getName() + "-") + UAMConstants.uam);
+		//network.setName((network.getName().isEmpty() ? "" : network.getName() + "-") + UAMConstants.uam);
 		network.getAttributes().putAttribute(UAMConstants.uam + "MaxLinkFreeSpeed", uamMaxLinkSpeed);
 		network.getAttributes().putAttribute(UAMConstants.uam + "DetourFactor", detourFactor);
 		NetworkWriter netwriter = new NetworkWriter(network);

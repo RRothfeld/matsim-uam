@@ -35,13 +35,13 @@ public class ConfigAddUAMParameters {
 	public static void addUAMParameters(Config config, String inputUAMFile, String modes, int threads, int searchRadius,
 										int walkDistance, UAMStrategy.UAMStrategyType routingStrategy, boolean ptSimulation) {
 		config.getModules().put(UAMConstants.uam, new UAMConfigGroup());
-		config.getModules().get(UAMConstants.uam).addParam("inputUAMFile", inputUAMFile);
-		config.getModules().get(UAMConstants.uam).addParam("availableAccessModes", modes);
-		config.getModules().get(UAMConstants.uam).addParam("parallelRouters", "" + threads);
+		config.getModules().get(UAMConstants.uam).addParam("inputFile", inputUAMFile);
+		config.getModules().get(UAMConstants.uam).addParam("accessEgressModes", modes);
+		//config.getModules().get(UAMConstants.uam).addParam("parallelRouters", "" + threads);
 		config.getModules().get(UAMConstants.uam).addParam("searchRadius", "" + searchRadius);
 		config.getModules().get(UAMConstants.uam).addParam("walkDistance", "" + walkDistance);
 		config.getModules().get(UAMConstants.uam).addParam("routingStrategy", routingStrategy.toString());
-		config.getModules().get(UAMConstants.uam).addParam("ptSimulation", String.valueOf(ptSimulation));
+		//config.getModules().get(UAMConstants.uam).addParam("ptSimulation", String.valueOf(ptSimulation));
 
 		// If PT simulation is desired (true), PT may not be listed under teleportedModeParameters, else it must be
 		ConfigGroup planscalcroute = config.getModules().get("planscalcroute");

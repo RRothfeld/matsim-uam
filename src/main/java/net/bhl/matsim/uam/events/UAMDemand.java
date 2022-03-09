@@ -59,7 +59,6 @@ public class UAMDemand implements PersonArrivalEventHandler, PersonDepartureEven
 	@Override
 	public void handleEvent(PersonDepartureEvent event) {
 		Network network = scenario.getNetwork();
-
 		if (event.getLegMode().startsWith(UAMConstants.access)) {
 
 			UAMData data = new UAMData();
@@ -81,9 +80,8 @@ public class UAMDemand implements PersonArrivalEventHandler, PersonDepartureEven
 			UAMData data = this.demand.get(event.getPersonId()).get(this.demand.get(event.getPersonId()).size() - 1);
 			data.departureFromStationTime = event.getTime();
 			uamTrips.remove(event.getPersonId());
-
-		} else if (event.getLegMode().equals(TransportMode.access_walk) || event.getLegMode().equals(TransportMode.transit_walk)
-				|| event.getLegMode().equals(TransportMode.pt)) {
+			// TODO: this can be made nicer with the routingMode attribute
+		} else if (event.getLegMode().equals(TransportMode.walk) || event.getLegMode().equals(TransportMode.pt)) {
 
 			// we need to store the information about the pt trip
 			// in case this becomes an access or an egress uam trip
@@ -175,7 +173,7 @@ public class UAMDemand implements PersonArrivalEventHandler, PersonDepartureEven
 		} else if (event.getLegMode().startsWith(UAMConstants.access)) {
 			UAMData data = this.demand.get(event.getPersonId()).get(this.demand.get(event.getPersonId()).size() - 1);
 			data.arrivalAtStationTime = event.getTime();
-		} else if (event.getLegMode().equals(TransportMode.egress_walk) || event.getLegMode().equals(TransportMode.transit_walk)
+		} else if (event.getLegMode().equals(TransportMode.walk)
 				|| (event.getLegMode().equals(TransportMode.pt) && !scenario.getConfig().transit().isUseTransit())) {
 			// we are still in the potential access or egress pt trip
 			PTData data = tempPTData.get(event.getPersonId());
@@ -194,7 +192,8 @@ public class UAMDemand implements PersonArrivalEventHandler, PersonDepartureEven
 
 		// when we arrive at the destination we need to check if there was an egress pt
 		// trip and add that information to the UAMData
-		if (!event.getActType().equals(UAMConstants.interaction) && !event.getActType().equals(PtConstants.TRANSIT_ACTIVITY_TYPE)) {
+		if (!event.getActType().equals(UAMConstants.interaction)
+				&& !event.getActType().equals(PtConstants.TRANSIT_ACTIVITY_TYPE)) {
 			if (uamTrips.containsKey(event.getPersonId()) && uamTrips.get(event.getPersonId())) {
 
 				if (tempPTData.containsKey(event.getPersonId())) {

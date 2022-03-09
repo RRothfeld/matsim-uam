@@ -11,6 +11,8 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 
+import net.bhl.matsim.uam.router.strategy.UAMStrategyUtils;
+import org.apache.log4j.Logger;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ReflectiveConfigGroup;
 import org.matsim.core.config.consistency.BeanValidationConfigConsistencyChecker;
@@ -25,6 +27,8 @@ import net.bhl.matsim.uam.router.strategy.UAMStrategy.UAMStrategyType;
  * @author balacmi (Milos Balac), RRothfeld (Raoul Rothfeld)
  */
 public class UAMConfigGroup extends ReflectiveConfigGroup {
+	private static final Logger log = Logger.getLogger(UAMConfigGroup.class);
+
 	public static final String GROUP_NAME = "uam";
 
 	static public final String ACCESS_EGRESS_MODES = "accessEgressModes";
@@ -36,8 +40,8 @@ public class UAMConfigGroup extends ReflectiveConfigGroup {
 
 	static private final String ACCESS_EGRESS_MODES_EXP = "Comma-separated list of possible access/egress modes";
 	static private final String INPUT_FILE_EXP = "Path to the input file for UAM infrastructure and vehicles";
-	static private final String SEARCH_RADIUS_EXP = "Maximum euclidean distance to a station";
-	static private final String USE_DYNAMIC_SEARCH_RADIUS_EXP = "TODO";
+	static private final String SEARCH_RADIUS_EXP = "Maximum Euclidean distance to a station (in distance units, e.g. meters); or, if dynamic search radius is used, the maximum ratio of a trip's Euclidean distance (in percent, e.g. 0.3)";
+	static private final String USE_DYNAMIC_SEARCH_RADIUS_EXP = "Whether or not the search radius is provided as a static radius (search radius interpreted as an absolute distance) or is being calculated dynamically for each trip (search radius interpreted as a percentage of Euclidean trip distance)";
 	static private final String WALK_DISTANCE_EXP = "If the access/egress distance is less than this distance, walk will be the UAM access and egress mode";
 	static private final String ROUTING_STRATEGY_EXP = "Selects the used routing strategy among " + String.join(", ",
 			Arrays.asList(UAMStrategyType.values()).stream().map(String::valueOf).collect(Collectors.toList()));
@@ -51,7 +55,7 @@ public class UAMConfigGroup extends ReflectiveConfigGroup {
 	@Positive
 	private double searchRadius = 5000.0;
 
-	private boolean useDynamicSearchRadius = true;
+	private boolean useDynamicSearchRadius = false;
 
 	@Positive
 	private double walkDistance = 500.0;
@@ -62,6 +66,8 @@ public class UAMConfigGroup extends ReflectiveConfigGroup {
 	protected void checkConsistency(Config config) {
 		super.checkConsistency(config);
 		new BeanValidationConfigConsistencyChecker().checkConsistency(config);
+		if (useDynamicSearchRadius && searchRadius > 1)
+			log.warn("You are using dynamic search radius with a search radius parameter of " + searchRadius + ", leading to very large search radii and high computation times. When using dynamic search radii, it is recommended to set the search radius to a percentage between 0 and 1, e.g. 0.3 for a search radius of 30% of a trip's Euclidean distance.");
 	}
 
 	public Map<String, String> getComments() {

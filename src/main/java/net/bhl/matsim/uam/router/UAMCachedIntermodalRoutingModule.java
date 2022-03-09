@@ -105,12 +105,12 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 			optionalUamRoute = strategyRouter.estimateUAMRoute(person, fromFacility, toFacility, departureTime);
 
 		if (optionalUamRoute.isEmpty()) {
-			if (counterWarningConvertedToWalk < counterLimit)
-				log.warn("No UAM prediction for person: " + person.getId() + " at time: " + departureTime
-						+ " could be calculated. Trip has been converted to walk.");
-
-			if (counterWarningConvertedToWalk == counterLimit - 1)
-				log.warn("No more UAM prediction warnings will be reported.");
+//			if (counterWarningConvertedToWalk < counterLimit)
+//				log.warn("No UAM prediction for person: " + person.getId() + " at time: " + departureTime
+//						+ " could be calculated. Trip has been converted to walk.");
+//
+//			if (counterWarningConvertedToWalk == counterLimit - 1)
+//				log.warn("No more UAM prediction warnings will be reported.");
 
 			counterWarningConvertedToWalk++;
 			Leg l = createTeleportationLeg(routeFactory, populationFactory,
@@ -161,6 +161,8 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 						network.getLinks().get(fromFacility.getLinkId()), uamRoute.bestOriginStation.getLocationLink(),
 						uamRoute.accessMode, UAMConstants.access + uamRoute.accessMode);
 				currentTime += uavAccessLeg.getTravelTime().seconds();
+				uavAccessLeg.setTravelTime(0.0);
+				uavAccessLeg.getRoute().setTravelTime(0.0);
 				trip.add(uavAccessLeg);
 		}
 
@@ -183,26 +185,26 @@ public class UAMCachedIntermodalRoutingModule implements RoutingModule {
 					.getWaitingTime(departureTime);
 			currentTime += waitTime;
 		} catch (IndexOutOfBoundsException e) {
-			if (counterWarningWaitingTimeSlot < counterLimit)
-				log.warn(UAMConstants.uam.toUpperCase() + " waiting time requests for non-existent time slot. Using default value of "
-						+ uamRoute.bestOriginStation.getDefaultWaitTime() + " for station "
-						+ uamRoute.bestOriginStation.getId().toString());
-
-			if (counterWarningWaitingTimeSlot == counterLimit - 1)
-				log.warn("No more waiting time warnings will be reported.");
+//			if (counterWarningWaitingTimeSlot < counterLimit)
+//				log.warn(UAMConstants.uam.toUpperCase() + " waiting time requests for non-existent time slot. Using default value of "
+//						+ uamRoute.bestOriginStation.getDefaultWaitTime() + " for station "
+//						+ uamRoute.bestOriginStation.getId().toString());
+//
+//			if (counterWarningWaitingTimeSlot == counterLimit - 1)
+//				log.warn("No more waiting time warnings will be reported.");
 
 			counterWarningWaitingTimeSlot++;
 			currentTime += uamRoute.bestOriginStation.getDefaultWaitTime(); // Added wait time of Origin Station
 		} catch (NullPointerException e) {
-			if (counterWarningWaitingTimeNull < counterLimit)
-				log.warn(UAMConstants.uam.toUpperCase() + " waiting time not available. Using default value of "
-						+ uamRoute.bestOriginStation.getDefaultWaitTime() + " for station "
-						+ uamRoute.bestOriginStation.getId().toString());
-
-			if (counterWarningWaitingTimeNull == counterLimit - 1)
-				log.warn("No more waiting time warnings will be reported.");
-
-			counterWarningWaitingTimeNull++;
+//			if (counterWarningWaitingTimeNull < counterLimit)
+//				log.warn(UAMConstants.uam.toUpperCase() + " waiting time not available. Using default value of "
+//						+ uamRoute.bestOriginStation.getDefaultWaitTime() + " for station "
+//						+ uamRoute.bestOriginStation.getId().toString());
+//
+//			if (counterWarningWaitingTimeNull == counterLimit - 1)
+//				log.warn("No more waiting time warnings will be reported.");
+//
+//			counterWarningWaitingTimeNull++;
 			currentTime += uamRoute.bestOriginStation.getDefaultWaitTime(); // Added wait time of Origin Station
 		}
 

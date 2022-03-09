@@ -6,12 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicle;
 import org.matsim.contrib.dvrp.fleet.DvrpVehicleSpecification;
 import org.matsim.contrib.dvrp.fleet.Fleet;
 import org.matsim.contrib.dvrp.optimizer.VrpOptimizer;
+import org.matsim.contrib.dvrp.passenger.PassengerEngine;
 import org.matsim.contrib.dvrp.passenger.PassengerEngineQSimModule;
 import org.matsim.contrib.dvrp.passenger.PassengerRequestCreator;
 import org.matsim.contrib.dvrp.run.AbstractDvrpModeQSimModule;
@@ -23,13 +25,12 @@ import org.matsim.contrib.dvrp.vrpagent.VrpAgentLogic.DynActionCreator;
 import org.matsim.contrib.dvrp.vrpagent.VrpAgentSourceQSimModule;
 import org.matsim.contrib.dvrp.vrpagent.VrpLeg;
 import org.matsim.contrib.dvrp.vrpagent.VrpLegFactory;
+import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.mobsim.qsim.QSim;
 import org.matsim.core.mobsim.qsim.components.QSimComponentsConfigurator;
-import org.matsim.core.mobsim.qsim.interfaces.DepartureHandler;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 import net.bhl.matsim.uam.data.UAMFleetData;
 import net.bhl.matsim.uam.dispatcher.UAMClosestRangedPreferPooledDispatcher;
@@ -63,6 +64,15 @@ public class UAMQSimModule extends AbstractDvrpModeQSimModule {
 
 	@Override
 	protected void configureQSim() {
+
+		addModalComponent(BookingEngine.class, modalProvider(getter -> {
+			Scenario scenario = getter.get(Scenario.class);
+			PassengerEngine passengerEngine = getter.getModal(PassengerEngine.class);
+			EventsManager eventsManager = getter.get(EventsManager.class);
+			Network network = getter.getModal(Network.class);
+			return new BookingEngine(scenario, passengerEngine, eventsManager, network);
+		}));
+
 		bindModal(PassengerRequestCreator.class).to(UAMRequestCreator.class);
 		bindModal(DynActionCreator.class).to(UAMActionCreator.class);
 		bindModal(VrpOptimizer.class).to(UAMOptimizer.class);
@@ -75,12 +85,9 @@ public class UAMQSimModule extends AbstractDvrpModeQSimModule {
 
 		bindModal(UAMSingleRideAppender.class).to(UAMSingleRideAppender.class);
 		bind(UAMSingleRideAppender.class);
-		bind(UAMDepartureHandler.class);
 
-		bindModal(DepartureHandler.class).to(UAMDepartureHandler.class);
 		addModalQSimComponentBinding().to(UAMDispatcherListener.class);
 		addModalQSimComponentBinding().to(UAMOptimizer.class);
-		addModalQSimComponentBinding().to(UAMDepartureHandler.class);
 
 		install(new VrpAgentSourceQSimModule(getMode()));
 		install(new PassengerEngineQSimModule(getMode()));

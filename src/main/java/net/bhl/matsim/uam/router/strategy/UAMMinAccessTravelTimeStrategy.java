@@ -10,6 +10,7 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.facilities.Facility;
 
+import net.bhl.matsim.uam.data.UAMAccessLeg;
 import net.bhl.matsim.uam.data.UAMAccessOptions;
 import net.bhl.matsim.uam.data.UAMRoute;
 import net.bhl.matsim.uam.infrastructure.UAMStation;
@@ -67,8 +68,11 @@ public class UAMMinAccessTravelTimeStrategy implements UAMStrategy {
 			double currentDepartureTime = departureTime
 					+ accessRoutesData.get(bestStationOrigin.getId()).getFastestAccessTime() + flyTime;
 			for (String mode : modes) {
-				double egressTravelTime = strategyUtils.estimateAccessLeg(false, toFacility, currentDepartureTime,
-						stationDestination, mode).travelTime;
+				UAMAccessLeg egressLeg = strategyUtils.estimateAccessLeg(false, toFacility, currentDepartureTime,
+						stationDestination, mode);
+				if (egressLeg == null)
+					continue;
+				double egressTravelTime = egressLeg.travelTime;
 				if (egressTravelTime < minEgressTime) {
 					bestStationDestination = stationDestination;
 					minEgressTime = egressTravelTime;

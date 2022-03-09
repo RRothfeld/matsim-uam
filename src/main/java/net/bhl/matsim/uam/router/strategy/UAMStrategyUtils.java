@@ -46,8 +46,8 @@ public class UAMStrategyUtils {
 	private LeastCostPathCalculator plcpccar;
 
 	public UAMStrategyUtils(UAMStations landingStations, UAMConfigGroup uamConfig, Scenario scenario,
-							UAMStationConnectionGraph stationConnections, Network carNetwork, TransitRouter transitRouter,
-							LeastCostPathCalculator plcpccar) {
+			UAMStationConnectionGraph stationConnections, Network carNetwork, TransitRouter transitRouter,
+			LeastCostPathCalculator plcpccar) {
 		this.landingStations = landingStations;
 		this.uamConfig = uamConfig;
 		this.scenario = scenario;
@@ -59,8 +59,8 @@ public class UAMStrategyUtils {
 
 	/**
 	 * @return the list of possible UAMStations accessible from/to a specific
-	 * location (facility) based in the searchRadius parameter defined in
-	 * the config file.
+	 *         location (facility) based in the searchRadius parameter defined in
+	 *         the config file.
 	 */
 	Collection<UAMStation> getPossibleStations(Facility fromFacility) {
 		if (uamConfig.getUseDynamicSearchRadius())
@@ -71,8 +71,8 @@ public class UAMStrategyUtils {
 
 	/**
 	 * @return the list of possible UAMStations accessible from/to a specific
-	 * location (facility) based in the searchRadius parameter defined in
-	 * the config file and the beeline distance.
+	 *         location (facility) based in the searchRadius parameter defined in
+	 *         the config file and the beeline distance.
 	 */
 	Collection<UAMStation> getPossibleStations(Facility fromFacility, Facility toFacility) {
 		double radius = uamConfig.getSearchRadius();
@@ -91,7 +91,7 @@ public class UAMStrategyUtils {
 	 * @return a map with station Id's as keys and UAMAccessRouteData as values.
 	 */
 	Map<Id<UAMStation>, UAMAccessOptions> getAccessOptions(boolean access, Collection<UAMStation> stations,
-														   Facility facility, double departureTime) {
+			Facility facility, double departureTime) {
 		Set<String> modes = new HashSet<>(uamConfig.getAccessEgressModes());
 		Map<Id<UAMStation>, UAMAccessOptions> accessRouteData = new HashMap<>();
 
@@ -104,12 +104,16 @@ public class UAMStrategyUtils {
 
 			for (String mode : modes) {
 				UAMAccessLeg uamAccessLeg = estimateAccessLeg(access, facility, departureTime, station, mode);
+				if (uamAccessLeg == null)
+					continue;
 				double distance = uamAccessLeg.distance;
 				double travelTime = uamAccessLeg.travelTime;
 
 				// TODO: Does this make sense?
-				if (distance <= uamConfig.getWalkDistance() && modes.contains(TransportMode.walk))
-					continue;
+				// I do not think so Feb 21 mb
+				// if (distance <= uamConfig.getWalkDistance() &&
+				// modes.contains(TransportMode.walk))
+				// continue;
 
 				if (distance < minDistance) {
 					minDistance = distance;
@@ -123,8 +127,8 @@ public class UAMStrategyUtils {
 			}
 
 			if (bestModeDistance != null)
-				accessRouteData.put(station.getId(), new UAMAccessOptions(minDistance, minAccessTime,
-						bestModeDistance, bestModeTime, station));
+				accessRouteData.put(station.getId(),
+						new UAMAccessOptions(minDistance, minAccessTime, bestModeDistance, bestModeTime, station));
 		}
 		return accessRouteData;
 	}
@@ -141,38 +145,41 @@ public class UAMStrategyUtils {
 		}
 
 		switch (mode) {
-			case TransportMode.car:
-				if (carNetwork.getLinks().get(from.getId()) != null)
-					from = carNetwork.getLinks().get(from.getId());
-				else
-					from = NetworkUtils.getNearestLinkExactly(carNetwork, from.getCoord());
+		case TransportMode.car:
+			if (carNetwork.getLinks().get(from.getId()) != null)
+				from = carNetwork.getLinks().get(from.getId());
+			else
+				from = NetworkUtils.getNearestLinkExactly(carNetwork, from.getCoord());
 
-				if (carNetwork.getLinks().get(to.getId()) != null)
-					to = carNetwork.getLinks().get(to.getId());
-				else
-					to = NetworkUtils.getNearestLinkExactly(carNetwork, to.getCoord());
+			if (carNetwork.getLinks().get(to.getId()) != null)
+				to = carNetwork.getLinks().get(to.getId());
+			else
+				to = NetworkUtils.getNearestLinkExactly(carNetwork, to.getCoord());
 
-				Path path = plcpccar.calcLeastCostPath(from.getFromNode(), to.getToNode(), time, null, null);
+			Path path = plcpccar.calcLeastCostPath(from.getFromNode(), to.getToNode(), time, null, null);
 
-				double distanceByCar = 0.0;
-				for (Link l : path.links) {
-					distanceByCar += l.getLength();
+			double distanceByCar = 0.0;
+			for (Link l : path.links) {
+				distanceByCar += l.getLength();
+			}
+			return new UAMAccessLeg(path.travelTime, distanceByCar, path.links);
+		case TransportMode.pt:
+			if (transitRouter != null) {
+				List<Leg> legs = transitRouter.calcRoute(new LinkWrapperFacility(from), new LinkWrapperFacility(to),
+						time, null);
+				double distanceByPt = 0.0;
+				double timeByPt = 0.0;
+				// pt router can return null under certain conditions
+				if (legs == null)
+					return null;
+				for (Leg leg : legs) {
+					timeByPt += leg.getTravelTime().seconds();
+					distanceByPt += leg.getRoute().getDistance();
 				}
-				return new UAMAccessLeg(path.travelTime, distanceByCar, path.links);
-			case TransportMode.pt:
-				if (transitRouter != null) {
-					List<Leg> legs = transitRouter.calcRoute(new LinkWrapperFacility(from), new LinkWrapperFacility(to),
-							time, null);
-					double distanceByPt = 0.0;
-					double timeByPt = 0.0;
-					for (Leg leg : legs) {
-						timeByPt += leg.getTravelTime().seconds();
-						distanceByPt += leg.getRoute().getDistance();
-					}
-					return new UAMAccessLeg(timeByPt, distanceByPt, null);
-				}
-			default:
-				return getBeelineAccessLeg(facility, station, mode);
+				return new UAMAccessLeg(timeByPt, distanceByPt, null);
+			}
+		default:
+			return getBeelineAccessLeg(facility, station, mode);
 		}
 	}
 
@@ -185,8 +192,7 @@ public class UAMStrategyUtils {
 		double speed = ((PlansCalcRouteConfigGroup) scenario.getConfig().getModules().get("planscalcroute"))
 				.getTeleportedModeSpeeds().get(mode);
 
-		return new UAMAccessLeg(distance * distanceFactor / speed,
-				distance * distanceFactor, null);
+		return new UAMAccessLeg(distance * distanceFactor / speed, distance * distanceFactor, null);
 	}
 
 	Network getNetwork() {

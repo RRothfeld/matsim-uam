@@ -20,7 +20,8 @@ import org.matsim.core.utils.collections.QuadTree;
 import java.util.*;
 
 /**
- * UAM Dispatcher that allows pooled ride between passengers and uses vehicle types' range restrictions.
+ * UAM Dispatcher that allows pooled ride between passengers and uses vehicle
+ * types' range restrictions.
  *
  * @author RRothfeld (Raoul Rothfeld)
  */
@@ -34,7 +35,8 @@ public class UAMClosestRangedPreferPooledDispatcher implements UAMDispatcher {
 	final boolean reoptimize = true;
 
 	@Inject
-	public UAMClosestRangedPreferPooledDispatcher(UAMSingleRideAppender appender, UAMManager uamManager, Network network, Fleet data) {
+	public UAMClosestRangedPreferPooledDispatcher(UAMSingleRideAppender appender, UAMManager uamManager,
+			Network network, Fleet data) {
 		this.appender = appender;
 
 		double[] bounds = NetworkUtils.getBoundingBox(network.getNodes().values()); // minX, minY, maxX, maxY
@@ -45,8 +47,8 @@ public class UAMClosestRangedPreferPooledDispatcher implements UAMDispatcher {
 			Coord coord = uamManager.getStations().getUAMStations().get(stationId).getLocationLink().getCoord();
 
 			if (!availableVehiclesTree.containsKey(vehicle.getVehicleType())) {
-				availableVehiclesTree.put(vehicle.getVehicleType(), new QuadTree<>(bounds[0], bounds[1],
-						bounds[2], bounds[3]));
+				availableVehiclesTree.put(vehicle.getVehicleType(),
+						new QuadTree<>(bounds[0], bounds[1], bounds[2], bounds[3]));
 			}
 
 			availableVehiclesTree.get(vehicle.getVehicleType()).put(coord.getX(), coord.getY(), vehicle);
@@ -73,9 +75,35 @@ public class UAMClosestRangedPreferPooledDispatcher implements UAMDispatcher {
 
 		if (task.getTaskType().equals(UAMTaskType.STAY)) {
 			Coord coord = ((StayTask) task).getLink().getCoord();
-			this.availableVehiclesTree.get(vehicle.getVehicleType()).put(coord.getX(), coord.getY(), vehicle);
-			this.availableVehicleLocations.put(vehicle, coord);
-			return;
+			// check if this vehicle has a pickup task next
+			// and then check if it has space
+			// because this vehicle might have be rerouted previously
+			// to another station for pickup
+			int index = schedule.getTasks().indexOf(schedule.getCurrentTask());
+
+			for (int i = index; i < schedule.getTaskCount(); i++) {
+				Task taskN = schedule.getTasks().get(i);
+				if (taskN instanceof UAMPickupTask) {
+					if (((UAMPickupTask) schedule.getTasks().get(i)).getRequests().size() < vehicle.getCapacity()) {
+						// TODO: probably should not be added at all here
+						// as these are enroute vehicles
+						//this.availableVehiclesTree.get(vehicle.getVehicleType()).put(coord.getX(), coord.getY(),
+						//		vehicle);
+						//this.availableVehicleLocations.put(vehicle, coord);
+						return;
+					}
+					break;
+				}
+				else if (i == schedule.getTaskCount() - 1) {
+					// means we do not have any pickup tasks
+					// so we can add this vehicle to the available list
+					// as it is empty
+					this.availableVehiclesTree.get(vehicle.getVehicleType()).put(coord.getX(), coord.getY(),
+							vehicle);
+					this.availableVehicleLocations.put(vehicle, coord);
+					return;
+				}
+			}
 		}
 
 		if (task instanceof UAMPickupTask)
@@ -121,8 +149,19 @@ public class UAMClosestRangedPreferPooledDispatcher implements UAMDispatcher {
 				this.availableVehiclesTree.get(vehicle.getVehicleType()).remove(coord.getX(), coord.getY(), vehicle);
 
 				appender.schedule(request, vehicle, now);
-				if (vehicle.getCapacity() > 1)
-					enRouteOrAwaitingPickupVehicles.add(vehicle);
+				Schedule schedule = vehicle.getSchedule();
+				int index = schedule.getTasks().indexOf(schedule.getCurrentTask());
+
+				for (int i = index; i < schedule.getTaskCount(); i++) {
+					Task task = schedule.getTasks().get(i);
+					if (task instanceof UAMPickupTask) {
+						if (((UAMPickupTask) schedule.getTasks().get(i)).getRequests().size() < vehicle
+								.getCapacity()) {
+							enRouteOrAwaitingPickupVehicles.add(vehicle);
+						}
+						break;
+					}
+				}
 			} else {
 				deferredRequests.add(request);
 			}
@@ -134,7 +173,7 @@ public class UAMClosestRangedPreferPooledDispatcher implements UAMDispatcher {
 	/**
 	 * @param request UAM Request
 	 * @return True if origins and destinations of requests are the same and vehicle
-	 * capacity constraint is met, otherwise false.
+	 *         capacity constraint is met, otherwise false.
 	 */
 	private boolean findEligableEnRouteVehicle(UAMRequest request) {
 		for (UAMVehicle vehicle : enRouteOrAwaitingPickupVehicles) {

@@ -5,11 +5,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.junit.Test;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.NetworkFactory;
+import org.matsim.api.core.v01.population.Leg;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Plan;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpModule;
 import org.matsim.core.config.Config;
@@ -18,7 +23,10 @@ import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ActivityParams;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup.ModeParams;
 import org.matsim.core.config.groups.QSimConfigGroup.StarttimeInterpretation;
 import org.matsim.core.config.groups.StrategyConfigGroup.StrategySettings;
+import org.matsim.core.config.groups.SubtourModeChoiceConfigGroup;
 import org.matsim.core.controler.Controler;
+import org.matsim.core.router.TripStructureUtils;
+import org.matsim.core.router.TripStructureUtils.Trip;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import com.google.common.collect.ImmutableSet;
@@ -30,10 +38,12 @@ import net.bhl.matsim.uam.qsim.UAMSpeedModule;
 import net.bhl.matsim.uam.run.UAMModule;
 
 public class RunCorsicaIT {
-	static public void main(String[] args) {
+	@Test
+	public void testCorsica() {
 		System.out.println(RunCorsicaIT.class.getResource("/corsica/corsica_config.xml"));
 
 		Config config = ConfigUtils.loadConfig(RunCorsicaIT.class.getResource("/corsica/corsica_config.xml"));
+		config.controler().setLastIteration(2);
 
 		{
 			// Remove some standard eqasim config groups
@@ -50,7 +60,8 @@ public class RunCorsicaIT {
 					strategy.setStrategyName("ChangeExpBeta");
 				}
 			}
-
+			String[] modes = { "car", "pt", "walk", "uam", "bike" };
+			((SubtourModeChoiceConfigGroup) config.getModules().get("subtourModeChoice")).setModes(modes);
 			config.strategy().setPlanSelectorForRemoval("WorstPlanSelector");
 			config.transit().setUseTransit(true);
 			config.transit().setUsingTransitInMobsim(true);
@@ -120,12 +131,26 @@ public class RunCorsicaIT {
 			}
 		}
 
+		for (Person person : scenario.getPopulation().getPersons().values()) {
+			for (Plan plan : person.getPlans()) {
+				for (Trip trip : TripStructureUtils.getTrips(plan)) {
+
+					for (PlanElement pe : trip.getTripElements()) {
+
+						if (pe instanceof Leg) {
+							((Leg) pe).setRoute(null);
+						}
+					}
+				}
+			}
+		}
+
 		// Set up controller
 		Controler controller = new Controler(scenario);
 
 		controller.addOverridingModule(new DvrpModule());
 		controller.addOverridingModule(new UAMModule());
-		controller.addOverridingModule(new UAMSpeedModule());
+		controller.addOverridingQSimModule(new UAMSpeedModule());
 		controller.addOverridingModule(new SwissRailRaptorModule());
 		controller.configureQSimComponents(UAMQSimModule.activateModes());
 

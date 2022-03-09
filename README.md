@@ -1,27 +1,39 @@
 
 # UAM-Extension
 
-This extension enhances MATSim (see the project's [Website](https://www.matsim.org) or [GitHub](https://github.com/matsim-org) pages) by allowing the definition and simulation of Urban Air Mobility infrastructure, vehicles, and operations. This extension is a collaborative development project between [Airbus Urban Mobility](https://www.airbus.com/innovation/urban-air-mobility.html), [Bauhaus Luftfahrt e.V.](https://www.bauhaus-luftfahrt.net), [ETH Zürich](https://www.ethz.ch), and [TU München](https://www.tse.bgu.tum.de) and authored by [Raoul Rothfeld](https://github.com/RRothfeld) and [Milos Balac](https://github.com/balacmi), with support from [Aitan Militão](https://github.com/Aitanm).
+This extension enhances MATSim (see the project's [Website](https://www.matsim.org) or [GitHub](https://github.com/matsim-org) pages) by allowing the definition and simulation of Urban Air Mobility infrastructure, vehicles, and operations. This extension is a collaborative development project between [Airbus Urban Mobility](https://www.airbus.com/innovation/urban-air-mobility.html), [Bauhaus Luftfahrt e.V.](https://www.bauhaus-luftfahrt.net), [ETH Zürich](https://www.ethz.ch), and [TU München](https://www.tse.bgu.tum.de) and authored by [Raoul Rothfeld](https://github.com/RRothfeld) and [Milos Balac](https://github.com/balacmi), with support from [Aitan Militão](https://github.com/Aitanm) and [Sebastian Hörl](https://github.com/sebhoerl).
 
 ## Installation
 Add the following to your maven pom.xml under `repositories`:
 ```xml
         <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
+            <id>eth-ivt-uam</id>
+            <url>https://packagecloud.io/eth-ivt/uam/maven2</url>
         </repository>
 ```
 And the following to you maven pom.xml under `dependencies` for the latest version under active development:
 ```xml
         <dependency>
-            <groupId>com.github.BauhausLuftfahrt</groupId>
-            <artifactId>MATSim-UAM</artifactId>
-            <version>master-SNAPSHOT</version>
+            <groupId>net.bhl.matsim</groupId>
+            <artifactId>matsim-uam</artifactId>
+            <version>3.0.0</version>
         </dependency>
 ```
-Older versions can be used by replacing the version text with any of the listed tags on [GitHub MATSim-UAM tags](https://github.com/BauhausLuftfahrt/MATSim-UAM/tags).
+Older versions are currently not supported.
 
 ## Versions and Change Log
+
+### Development
+
+### v3.0.0
+General:
+- Update to MATSim v12
+- Removal of ptSimulation config setting
+- Changed prebooking infrastructure, now there is a BookingEngine
+- Dispatchers are updated to account for possibility of StayTask when vehicle is sent from a different station (StayTask-FlyTask-StayTask-PickupTask-...)
+- Added integration test
+- Added clarification of useDynamicSearchRadius (default is now false)
+- In BookingEngine the case where access leg is zero seconds long is now handled properly
 
 ### v2.1
 General:
@@ -69,13 +81,18 @@ Logging:
 - Publication of first open source MATSim-UAM version
 
 ## Related Publications
-The following list provides a reverse-chronological overview of publications related to or based on or related to the UAM-Extension:
-* Rothfeld, R., Fu, M., Balac, M., & Antoniou, C. (2020). PRE-PRINT Potential Urban Air Mobility Travel Time Savings: An Exploratory Analysis of Munich, Paris, and San Francisco.
+
+If you use this repository, please use the following citation in your papers or reports:
+
+Rothfeld, R. L., Balac, M., Ploetner, K. O., & Antoniou, C. (2018). Agent-based Simulation of Urban Air Mobility. 2018 Modeling and Simulation Technologies Conference, 1–10. https://doi.org/10.2514/6.2018-3891
+
+The following list provides a reverse-chronological overview of publications related to or based on the UAM-Extension:
+* Rothfeld, R. (2021). Agent-based Modelling and Simulation of Urban Air Mobility Operation: An Evaluation of Travel Times and Transport Performance. Dissertation. Technical University of Munich.
+* Rothfeld, R., Fu, M., Balać, M., & Antoniou, C. (2021). Potential Urban Air Mobility Travel Time Savings: An Exploratory Analysis of Munich, Paris, and San Francisco. Sustainability, 13(4). https://doi.org/10.3390/su13042217
 * Straubinger, A., Rothfeld, R., Shamiyeh, M., Buechter, K.-D., Kaiser, J., & Ploetner, K. O. (2020). An Overview of Current Research and Developments in Urban Air Mobility - Setting the Scene for UAM Introduction. Journal of Air Transport Management, 87(101852). https://doi.org/10.1016/j.jairtraman.2020.101852
 * Ploetner, K., Rothfeld, R., Shamiyeh, M., Kabel, S., Frank, F., Straubinger, A., Llorca, C., Fu, M., Moreno, A., Pukhova, A., Zhang, Q., Al Haddad, C., Wagner, H., Antoniou, C., & Moeckel, R. (2020). Long-term Application Potential of Urban Air Mobility Complementing Public Transport: An Upper Bavaria Example. CEAS Aeronautical Journal: An Official Journal of the Council of European Aerospace Societies.
 * Rothfeld, R., Straubinger, A., Fu, M., Al Haddad, C., & Antoniou, C. (2020). Urban air mobility. In C. Antoniou, D. Efthymiou, & E. Chaniotakis (Eds.), Demand for Emerging Transportation Systems - Modeling Adoption, Satisfaction, and Mobility Patterns (1st ed., pp. 267–284). Elsevier.
 * Balac, M., Rothfeld, R. L., & Horl, S. (2019). The Prospects of on-demand Urban Air Mobility in Zurich, Switzerland. 2019 IEEE Intelligent Transportation Systems Conference, ITSC 2019, 906–913. https://doi.org/10.1109/ITSC.2019.8916972
-* Rothfeld, R., Straubinger, A., Paul, A., & Antoniou, C. (2019). Analysis of European airports’ access and egress travel times using Google Maps. Transport Policy, 81(May), 148–162. https://doi.org/10.1016/j.tranpol.2019.05.021
 * Balac, M., Rothfeld, R. L., & Horl, S. (2019). The Prospects of on-demand Urban Air Mobility in Zurich, Switzerland. 2019 IEEE Intelligent Transportation Systems Conference, ITSC 2019, 906–913. https://doi.org/10.1109/ITSC.2019.8916972
 * Balac, M., Vetrella, A. R., Rothfeld, R., & Schmid, B. (2019). Demand Estimation for Aerial Vehicles in Urban Settings. IEEE Intelligent Transportation Systems Magazine, 11(3), 105–116. https://doi.org/10.1109/MITS.2019.2919500
 * Fu, M., Rothfeld, R., & Antoniou, C. (2019). Exploring Preferences for Transportation Modes in an Urban Air Mobility Environment: Munich Case Study. Transportation Research Record. https://doi.org/10.1177/0361198119843858

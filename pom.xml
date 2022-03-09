@@ -5,7 +5,7 @@
 
 	<groupId>net.bhl.matsim</groupId>
 	<artifactId>matsim-uam</artifactId>
-	<version>2.1</version>
+	<version>3.0.0</version>
 	<packaging>jar</packaging>
 
 	<properties>
@@ -14,12 +14,44 @@
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
 	</properties>
+	
+	<distributionManagement>
+		<repository>
+			<id>packagecloud-uam</id>
+			<url>packagecloud+https://packagecloud.io/eth-ivt/uam</url>
+		</repository>
+	</distributionManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>net.bhl.matsim.uam.run.RunUAMScenario</mainClass>
+						</manifest>
+					</archive>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+				</configuration>
+			</plugin>
+		</plugins>
+		<extensions>
+			<extension>
+				<groupId>io.packagecloud.maven.wagon</groupId>
+				<artifactId>maven-packagecloud-wagon</artifactId>
+				<version>0.0.6</version>
+			</extension>
+		</extensions>
+	</build>
 
 	<repositories>
 		<repository>
 			<id>matsim</id>
-			<name>MATSim release repository</name>
-			<url>http://dl.bintray.com/matsim/matsim</url>
+			<name>MATSim Maven repository</name>
+			<url>https://repo.matsim.org/repository/matsim/</url>
 		</repository>
 		<repository>
 			<id>osgeo</id>
@@ -32,7 +64,7 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.6</version>
+			<version>2.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.matsim</groupId>
@@ -48,6 +80,12 @@
 			<groupId>org.matsim.contrib</groupId>
 			<artifactId>discrete_mode_choice</artifactId>
 			<version>${matsim.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.1</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

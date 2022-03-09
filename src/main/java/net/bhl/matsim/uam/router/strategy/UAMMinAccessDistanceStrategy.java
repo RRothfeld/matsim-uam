@@ -73,7 +73,8 @@ public class UAMMinAccessDistanceStrategy implements UAMStrategy {
 		}
 		
 		// TODO: What if non is found? Should return Optional.empty();
-
+		if (bestStationOrigin == null || bestStationDestination == null)
+			return Optional.empty();
 		return Optional.of(new UAMRoute(accessRoutesData.get(bestStationOrigin.getId()).getShortestDistanceMode(), bestStationOrigin,
 				bestStationDestination, bestModeEgress));
 	}
